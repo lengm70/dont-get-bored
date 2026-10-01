@@ -1,0 +1,34 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Configure don't get bored",
+      "type": "process",
+      "command": "C:\\msys64\\ucrt64\\bin\\cmake.exe",
+      "args": [
+        "-S", "${workspaceFolder}",
+        "-B", "${workspaceFolder}/build",
+        "-G", "Ninja",
+        "-DCMAKE_BUILD_TYPE=Debug",
+        "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+        "-DCMAKE_PREFIX_PATH=C:/msys64/ucrt64",
+        "-DCMAKE_CXX_COMPILER=C:/msys64/ucrt64/bin/g++.exe",
+        "-DCMAKE_MAKE_PROGRAM=C:/msys64/ucrt64/bin/ninja.exe"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Build don't get bored",
+      "type": "process",
+      "command": "C:\\msys64\\ucrt64\\bin\\cmake.exe",
+      "args": ["--build", "${workspaceFolder}/build"],
+      "dependsOn": "Configure don't get bored",
+      "dependsOrder": "sequence",
+      "problemMatcher": "$gcc",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
+}

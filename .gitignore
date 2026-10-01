@@ -1,0 +1,33 @@
+/build/
+/.vscode/*
+!/.vscode/tasks.json
+!/.vscode/launch.json
+!/.vscode/c_cpp_properties.json
+/config/settings.ini
+/config/highscores.ini
+*.exe
+*.o
+*.obj
+
+# Local agent state and configuration
+.agents/
+.codex/
+.claude/
+.cursor/
+
+# Local environment and credentials
+.env
+.env.*
+*.local
+*.key
+*.pem
+*.p12
+*.pfx
+*.secret
+*.secrets
+credentials.json
+secrets.json
+token.json
+tokens.json
+api-keys.*
+api_keys.*
