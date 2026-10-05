@@ -43,6 +43,31 @@ inline constexpr std::array<const char*, 10> AllLabels(const Labels& labels) {
             labels.fpsLimit, labels.languageChoices};
 }
 
+struct SelectionLabels {
+    const char* subtitle;
+    const char* snakeHint;
+    const char* tetrisHint;
+    const char* breakoutHint;
+    const char* minesweeperHint;
+    const char* play;
+};
+
+inline constexpr SelectionLabels selectionChinese{
+    "四款小游戏，随时开局", "吃食物，让小蛇长大", "旋转方块，消除整行",
+    "接住小球，击碎砖块", "插旗排雷，寻找安全格", "进入游戏"};
+inline constexpr SelectionLabels selectionEnglish{
+    "Four games. Pick your next break.", "Grow your snake", "Stack & clear",
+    "Keep the ball alive", "Find every safe tile", "Play"};
+
+inline const SelectionLabels& SelectionForLanguage(app::Language language) {
+    return language == app::Language::English ? selectionEnglish : selectionChinese;
+}
+
+inline constexpr std::array<const char*, 6> AllLabels(const SelectionLabels& labels) {
+    return {labels.subtitle, labels.snakeHint, labels.tetrisHint,
+            labels.breakoutHint, labels.minesweeperHint, labels.play};
+}
+
 struct SnakeLabels {
     const char* name;
     const char* score;

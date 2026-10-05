@@ -19,6 +19,27 @@ Rectangle BoardBounds() {
             static_cast<float>(rules::rows * config::cellSize)};
 }
 
+void DrawHeadEyes(Cell head, Direction heading, const ui::UiLayout& layout) {
+    Vector2 forward{};
+    switch (heading) {
+        case Direction::Up: forward = {0, -1}; break;
+        case Direction::Right: forward = {1, 0}; break;
+        case Direction::Down: forward = {0, 1}; break;
+        case Direction::Left: forward = {-1, 0}; break;
+    }
+    const Vector2 side{-forward.y, forward.x};
+    const Vector2 center{
+        config::boardX + (head.x + 0.5f) * config::cellSize,
+        config::boardY + (head.y + 0.5f) * config::cellSize
+    };
+    for (const float sign : {-1.0f, 1.0f}) {
+        const Vector2 eye = layout.Point(
+            center.x + forward.x * config::eyeForwardOffset + sign * side.x * config::eyeSideOffset,
+            center.y + forward.y * config::eyeForwardOffset + sign * side.y * config::eyeSideOffset);
+        DrawCircleV(eye, config::eyeRadius * layout.scale, config::eyeColor);
+    }
+}
+
 void DrawBoard(const SnakeGame& game, const ui::UiLayout& layout) {
     DrawRectangleRec(layout.Rect(BoardBounds()), config::boardColor);
     for (int column = 1; column < rules::columns; ++column) {
@@ -41,16 +62,20 @@ void DrawBoard(const SnakeGame& game, const ui::UiLayout& layout) {
                     config::foodColor);
     }
 
-    bool head = true;
-    for (const Cell cell : game.Body()) {
+    const auto& body = game.Body();
+    for (std::size_t index = 0; index < body.size(); ++index) {
+        const Cell cell = body[index];
         const float x = config::boardX + cell.x * config::cellSize + config::segmentInset;
         const float y = config::boardY + cell.y * config::cellSize + config::segmentInset;
         const float side = config::cellSize - 2.0f * config::segmentInset;
+        // Normalize by length so both short and long snakes have a distinct dark tail.
+        const float progress = body.size() > 1
+            ? static_cast<float>(index) / static_cast<float>(body.size() - 1) : 0.0f;
         DrawRectangleRounded(layout.Rect(Rectangle{x, y, side, side}),
                              config::segmentRoundness, config::segmentSegments,
-                             head ? config::headColor : config::bodyColor);
-        head = false;
+                             ColorLerp(config::headColor, config::tailColor, progress));
     }
+    if (!body.empty()) DrawHeadEyes(body.front(), game.Heading(), layout);
 
     DrawRectangleLinesEx(layout.Rect(BoardBounds()), 2.0f * layout.scale,
                          ui::config::accentColor);

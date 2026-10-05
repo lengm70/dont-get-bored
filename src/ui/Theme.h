@@ -6,6 +6,7 @@
 namespace ui {
 
 void ConfigureGuiStyle(Font font, float scale);
-void DrawBackground(const UiLayout& layout, bool showAccent = true);
+void DrawBackground(const UiLayout& layout, bool showAccent = true,
+                    Rectangle panel = config::panel);
 
 }  // namespace ui

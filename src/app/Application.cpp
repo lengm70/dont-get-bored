@@ -16,6 +16,7 @@
 #include "games/minesweeper/MinesweeperGame.h"
 #include "games/minesweeper/MinesweeperScreen.h"
 #include "ui/FontLoader.h"
+#include "ui/BackgroundImage.h"
 #include "ui/MenuView.h"
 #include "ui/Theme.h"
 #include "ui/UiLayout.h"
@@ -43,6 +44,7 @@ int Run() {
         return 1;
     }
     ui::ConfigureGuiStyle(font, ui::CurrentLayout().scale);
+    ui::LoadBackgroundImage();
 
     Screen screen = Screen::MainMenu;
     games::snake::SnakeGame snake;
@@ -151,6 +153,7 @@ int Run() {
         }
     }
 
+    ui::UnloadBackgroundImage();
     UnloadFont(font);
     CloseWindow();
     return 0;

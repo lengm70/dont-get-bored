@@ -2,6 +2,13 @@
 
 A C++17 GUI collection with Snake, Tetris, Breakout, and Minesweeper, with Chinese and English menus. Every game starts with **Space** from its ready screen.
 
+## What's new in v0.2.1
+
+- Cosmic pixel-art background with a matching violet UI palette.
+- Illustrated game selection cards with hover feedback and localized descriptions.
+- Snake head eyes follow its direction; body colors fade clearly from head to tail.
+- Background artwork loads once and preserves its aspect ratio at different window sizes.
+
 ## Download for Windows
 
 Download `dont-get-bored-windows-x64.zip` from the [latest release](https://github.com/lengm70/dont-get-bored/releases/latest), extract the entire archive, and run `dont_get_bored.exe` in the extracted folder. Keep the DLL files and `assets` folder beside the program. The separate EXE asset requires those dependencies. Source code archives are available on the release page.
@@ -62,7 +69,7 @@ The menu font is a subset of [Noto Sans SC](https://github.com/google/fonts/tree
 - Each game's `Rules.h` contains gameplay constants; `Config.h` contains presentation constants.
 - `src/ui/`: menus, scaling, style, labels, and font loading.
 - `config/`: local settings, high scores, and default examples.
-- `assets/`: menu font and license.
+- `assets/`: menu font, font license, and the cosmic pixel-art background.
 - `external/`: vendored raygui header and license.
 
 To add a menu label, define it in `src/ui/UiText.h`; `FontLoader` collects codepoints from both language sets. To add a game, create a module under `src/games/`, add an entry in `MenuView.cpp`, and wire its screen in `Application.cpp`.

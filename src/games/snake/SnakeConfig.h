@@ -1,6 +1,7 @@
 #pragma once
 
 #include "raylib.h"
+#include "ui/UiPalette.h"
 
 namespace games::snake::config {
 
@@ -20,13 +21,17 @@ inline constexpr int overlayHintSize = 22;
 inline constexpr float segmentInset = 1.5f;
 inline constexpr float segmentRoundness = 0.25f;
 inline constexpr int segmentSegments = 4;
+inline constexpr float eyeRadius = 1.7f;
+inline constexpr float eyeForwardOffset = 4.0f;
+inline constexpr float eyeSideOffset = 4.0f;
 inline constexpr float foodRadius = 7.0f;
 
-inline constexpr Color boardColor{14, 28, 42, 255};
-inline constexpr Color gridColor{42, 63, 77, 255};
+inline constexpr Color boardColor = ui::palette::board;
+inline constexpr Color gridColor = ui::palette::grid;
 inline constexpr Color headColor{91, 226, 204, 255};
-inline constexpr Color bodyColor{53, 177, 151, 255};
+inline constexpr Color tailColor{35, 95, 88, 255};
+inline constexpr Color eyeColor{12, 31, 40, 255};
 inline constexpr Color foodColor{255, 138, 112, 255};
-inline constexpr Color overlayColor{12, 24, 37, 220};
+inline constexpr Color overlayColor = ui::palette::overlay;
 
 }  // namespace games::snake::config

@@ -3,6 +3,7 @@
 #include <array>
 
 #include "raylib.h"
+#include "ui/UiPalette.h"
 #include "games/breakout/BreakoutRules.h"
 
 namespace games::breakout::config {
@@ -20,10 +21,10 @@ inline constexpr int overlayHintY = 341;
 inline constexpr int overlayTitleSize = 30;
 inline constexpr int overlayHintSize = 19;
 inline constexpr float borderWidth = 2.0f;
-inline constexpr Color boardColor{14, 28, 42, 255};
+inline constexpr Color boardColor = ui::palette::board;
 inline constexpr Color paddleColor{91, 226, 204, 255};
 inline constexpr Color ballColor{238, 246, 255, 255};
-inline constexpr Color overlayColor{12, 24, 37, 220};
+inline constexpr Color overlayColor = ui::palette::overlay;
 inline constexpr std::array<Color, rules::brickRows> brickColors{{
     {237, 111, 116, 255}, {239, 165, 94, 255}, {244, 205, 88, 255},
     {109, 204, 128, 255}, {104, 143, 224, 255}

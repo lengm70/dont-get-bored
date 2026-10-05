@@ -4,6 +4,8 @@
 
 #include "raygui.h"
 #include "config/UiConfig.h"
+#include "ui/GameSelectionView.h"
+#include "ui/GameSelectionConfig.h"
 #include "ui/TextDraw.h"
 #include "ui/Theme.h"
 #include "ui/UiLayout.h"
@@ -49,35 +51,6 @@ MenuResult DrawMainMenu(Font font, const text::Labels& labels, const UiLayout& l
                                  config::mainButtonWidth, layout), labels.quit)) {
         return {MenuAction::Quit};
     }
-    return {};
-}
-
-MenuResult DrawGameSelection(Font font, const text::Labels& labels,
-                             app::Language language,
-                             const UiLayout& layout) {
-    DrawCenteredText(font, labels.selectGame, config::pageTitleY,
-                     config::pageTitleSize, config::textColor, layout);
-    struct Entry { const char* name; MenuAction action; };
-    const std::array<Entry, 4> entries{{
-        {text::SnakeForLanguage(language).name, MenuAction::StartSnake},
-        {text::TetrisForLanguage(language).name, MenuAction::StartTetris},
-        {text::BreakoutForLanguage(language).name, MenuAction::StartBreakout},
-        {text::MinesweeperForLanguage(language).name, MenuAction::StartMinesweeper}
-    }};
-    constexpr int gridWidth = config::gameButtonColumns * config::gameButtonWidth +
-        (config::gameButtonColumns - 1) * config::gameButtonGap;
-    for (int index = 0; index < static_cast<int>(entries.size()); ++index) {
-        const int x = (config::designWidth - gridWidth) / 2 +
-            (index % config::gameButtonColumns) * (config::gameButtonWidth + config::gameButtonGap);
-        const int y = config::gameButtonY + (index / config::gameButtonColumns) * config::gameButtonRowGap;
-        if (GuiButton(layout.Rect({static_cast<float>(x), static_cast<float>(y),
-                                  static_cast<float>(config::gameButtonWidth),
-                                  static_cast<float>(config::buttonHeight)}), entries[index].name)) {
-            return {entries[index].action};
-        }
-    }
-    if (GuiButton(CenteredButton(config::backButtonY, config::backButtonWidth, layout),
-                  labels.back)) return {MenuAction::Back};
     return {};
 }
 
@@ -127,11 +100,12 @@ MenuResult DrawSettings(Font font, app::Settings& settings,
 MenuResult DrawMenu(app::Screen screen, Font font, app::Settings& settings) {
     const UiLayout layout = CurrentLayout();
     const text::Labels& labels = text::ForLanguage(settings.language);
-    DrawBackground(layout);
+    if (screen == app::Screen::GameSelection) DrawBackground(layout, false, selection::panel);
+    else DrawBackground(layout);
     switch (screen) {
         case app::Screen::MainMenu: return DrawMainMenu(font, labels, layout);
         case app::Screen::GameSelection:
-            return DrawGameSelection(font, labels, settings.language, layout);
+            return DrawGameSelection(font, settings.language, layout);
         case app::Screen::Settings: return DrawSettings(font, settings, labels, layout);
         case app::Screen::Snake: break;
         case app::Screen::Tetris: break;

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(dont_get_bored VERSION 0.2.0 LANGUAGES CXX)
+project(dont_get_bored VERSION 0.2.1 LANGUAGES CXX)
 
 find_package(raylib CONFIG REQUIRED)
 
@@ -19,7 +19,10 @@ add_executable(dont_get_bored
     src/games/minesweeper/MinesweeperGame.cpp
     src/games/minesweeper/MinesweeperScreen.cpp
     src/ui/FontLoader.cpp
+    src/ui/BackgroundImage.cpp
     src/ui/MenuView.cpp
+    src/ui/GameSelectionView.cpp
+    src/ui/GameIllustration.cpp
     src/ui/Theme.cpp
     src/ui/raygui_impl.cpp
 )
@@ -54,6 +57,7 @@ if(BUILD_TESTING)
         src/games/tetris/TetrisGame.cpp
         src/games/tetris/TetrisScreen.cpp
         src/ui/Theme.cpp
+        src/ui/BackgroundImage.cpp
         src/ui/raygui_impl.cpp
     )
     target_compile_features(game_input_tests PRIVATE cxx_std_17)

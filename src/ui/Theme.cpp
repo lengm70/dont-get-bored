@@ -5,6 +5,7 @@
 
 #include "raygui.h"
 #include "config/UiConfig.h"
+#include "ui/BackgroundImage.h"
 
 namespace ui {
 namespace {
@@ -36,14 +37,9 @@ void ConfigureGuiStyle(Font font, float scale) {
     GuiSetStyle(DEFAULT, TEXT_COLOR_PRESSED, ColorToInt(config::textColor));
 }
 
-void DrawBackground(const UiLayout& layout, bool showAccent) {
-    DrawRectangleGradientV(0, 0, GetScreenWidth(), GetScreenHeight(),
-                           config::gradientTop, config::gradientBottom);
-    DrawCircleV(layout.Point(config::leftGlowX, config::leftGlowY),
-                config::leftGlowRadius * layout.scale, config::leftGlowColor);
-    DrawCircleV(layout.Point(config::rightGlowX, config::rightGlowY),
-                config::rightGlowRadius * layout.scale, config::rightGlowColor);
-    DrawRectangleRounded(layout.Rect(config::panel), config::panelRoundness,
+void DrawBackground(const UiLayout& layout, bool showAccent, Rectangle panel) {
+    DrawBackgroundImage(GetScreenWidth(), GetScreenHeight());
+    DrawRectangleRounded(layout.Rect(panel), config::panelRoundness,
                          config::panelSegments, config::panelColor);
     if (showAccent) {
         DrawRectangleRounded(layout.Rect(config::accentBar), config::accentRoundness,

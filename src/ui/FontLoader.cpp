@@ -30,6 +30,9 @@ Font LoadMenuFont() {
     for (const auto* labels : {&text::chinese, &text::english}) {
         for (const char* label : text::AllLabels(*labels)) collect(label);
     }
+    for (const auto* labels : {&text::selectionChinese, &text::selectionEnglish}) {
+        for (const char* label : text::AllLabels(*labels)) collect(label);
+    }
     for (const auto* labels : {&text::snakeChinese, &text::snakeEnglish}) {
         for (const char* label : text::AllLabels(*labels)) collect(label);
     }

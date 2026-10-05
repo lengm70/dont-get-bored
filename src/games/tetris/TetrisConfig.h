@@ -3,6 +3,7 @@
 #include <array>
 
 #include "raylib.h"
+#include "ui/UiPalette.h"
 
 namespace games::tetris::config {
 
@@ -32,9 +33,9 @@ inline constexpr int overlayHintY = 329;
 inline constexpr int overlayHintSize = 17;
 inline constexpr float cellInset = 1.0f;
 
-inline constexpr Color boardColor{14, 28, 42, 255};
-inline constexpr Color gridColor{42, 63, 77, 255};
-inline constexpr Color overlayColor{12, 24, 37, 225};
+inline constexpr Color boardColor = ui::palette::board;
+inline constexpr Color gridColor = ui::palette::grid;
+inline constexpr Color overlayColor = ui::palette::overlay;
 inline constexpr std::array<Color, 7> pieceColors{{
     {88, 214, 231, 255},   // I
     {244, 205, 88, 255},   // O

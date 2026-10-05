@@ -3,6 +3,7 @@
 #include <array>
 
 #include "raylib.h"
+#include "ui/UiPalette.h"
 
 namespace games::minesweeper::config {
 
@@ -27,12 +28,12 @@ inline constexpr int overlayTitleY = 311;
 inline constexpr int overlayHintY = 354;
 inline constexpr int overlayTitleSize = 30;
 inline constexpr int overlayHintSize = 19;
-inline constexpr Color hiddenColor{46, 70, 94, 255};
-inline constexpr Color revealedColor{22, 39, 55, 255};
-inline constexpr Color hoveredColor{65, 96, 120, 255};
+inline constexpr Color hiddenColor = ui::palette::control;
+inline constexpr Color revealedColor = ui::palette::board;
+inline constexpr Color hoveredColor = ui::palette::focused;
 inline constexpr Color flagColor{244, 205, 88, 255};
 inline constexpr Color mineColor{237, 111, 116, 255};
-inline constexpr Color overlayColor{12, 24, 37, 235};
+inline constexpr Color overlayColor = ui::palette::overlay;
 inline constexpr std::array<Color, 8> numberColors{{
     {104, 170, 244, 255}, {109, 204, 128, 255}, {237, 111, 116, 255},
     {176, 130, 224, 255}, {239, 165, 94, 255}, {88, 214, 231, 255},
