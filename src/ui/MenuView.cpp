@@ -53,16 +53,29 @@ MenuResult DrawMainMenu(Font font, const text::Labels& labels, const UiLayout& l
 }
 
 MenuResult DrawGameSelection(Font font, const text::Labels& labels,
-                             const text::SnakeLabels& snakeLabels,
-                             const text::TetrisLabels& tetrisLabels,
+                             app::Language language,
                              const UiLayout& layout) {
     DrawCenteredText(font, labels.selectGame, config::pageTitleY,
                      config::pageTitleSize, config::textColor, layout);
-    if (GuiButton(CenteredButton(config::gameButtonY, config::mainButtonWidth, layout),
-                  snakeLabels.name)) return {MenuAction::StartSnake};
-    if (GuiButton(CenteredButton(config::gameButtonY + config::mainButtonGap,
-                                 config::mainButtonWidth, layout),
-                  tetrisLabels.name)) return {MenuAction::StartTetris};
+    struct Entry { const char* name; MenuAction action; };
+    const std::array<Entry, 4> entries{{
+        {text::SnakeForLanguage(language).name, MenuAction::StartSnake},
+        {text::TetrisForLanguage(language).name, MenuAction::StartTetris},
+        {text::BreakoutForLanguage(language).name, MenuAction::StartBreakout},
+        {text::MinesweeperForLanguage(language).name, MenuAction::StartMinesweeper}
+    }};
+    constexpr int gridWidth = config::gameButtonColumns * config::gameButtonWidth +
+        (config::gameButtonColumns - 1) * config::gameButtonGap;
+    for (int index = 0; index < static_cast<int>(entries.size()); ++index) {
+        const int x = (config::designWidth - gridWidth) / 2 +
+            (index % config::gameButtonColumns) * (config::gameButtonWidth + config::gameButtonGap);
+        const int y = config::gameButtonY + (index / config::gameButtonColumns) * config::gameButtonRowGap;
+        if (GuiButton(layout.Rect({static_cast<float>(x), static_cast<float>(y),
+                                  static_cast<float>(config::gameButtonWidth),
+                                  static_cast<float>(config::buttonHeight)}), entries[index].name)) {
+            return {entries[index].action};
+        }
+    }
     if (GuiButton(CenteredButton(config::backButtonY, config::backButtonWidth, layout),
                   labels.back)) return {MenuAction::Back};
     return {};
@@ -118,12 +131,12 @@ MenuResult DrawMenu(app::Screen screen, Font font, app::Settings& settings) {
     switch (screen) {
         case app::Screen::MainMenu: return DrawMainMenu(font, labels, layout);
         case app::Screen::GameSelection:
-            return DrawGameSelection(font, labels,
-                                     text::SnakeForLanguage(settings.language),
-                                     text::TetrisForLanguage(settings.language), layout);
+            return DrawGameSelection(font, labels, settings.language, layout);
         case app::Screen::Settings: return DrawSettings(font, settings, labels, layout);
         case app::Screen::Snake: break;
         case app::Screen::Tetris: break;
+        case app::Screen::Breakout: break;
+        case app::Screen::Minesweeper: break;
     }
     return {};
 }

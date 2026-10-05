@@ -1,5 +1,7 @@
 #include "app/Application.h"
 
+#include <algorithm>
+
 #include "raylib.h"
 #include "app/Screen.h"
 #include "config/AppSettings.h"
@@ -9,6 +11,10 @@
 #include "games/snake/SnakeScreen.h"
 #include "games/tetris/TetrisGame.h"
 #include "games/tetris/TetrisScreen.h"
+#include "games/breakout/BreakoutGame.h"
+#include "games/breakout/BreakoutScreen.h"
+#include "games/minesweeper/MinesweeperGame.h"
+#include "games/minesweeper/MinesweeperScreen.h"
 #include "ui/FontLoader.h"
 #include "ui/MenuView.h"
 #include "ui/Theme.h"
@@ -41,6 +47,8 @@ int Run() {
     Screen screen = Screen::MainMenu;
     games::snake::SnakeGame snake;
     games::tetris::TetrisGame tetris;
+    games::breakout::BreakoutGame breakout;
+    games::minesweeper::MinesweeperGame minesweeper;
     bool running = true;
 
     while (running && !WindowShouldClose()) {
@@ -48,28 +56,39 @@ int Run() {
         if (IsKeyPressed(KEY_F9)) settings.resolution = Resolution::P720;
         if (IsKeyPressed(KEY_ESCAPE)) {
             if (screen == Screen::MainMenu) running = false;
-            else if (screen == Screen::Snake || screen == Screen::Tetris) {
+            else if (screen == Screen::Snake || screen == Screen::Tetris ||
+                     screen == Screen::Breakout || screen == Screen::Minesweeper) {
                 screen = Screen::GameSelection;
             }
             else screen = Screen::MainMenu;
         }
 
+        const HighScores previousScores = highScores;
         if (screen == Screen::Snake) {
             games::snake::UpdateFromInput(snake, GetFrameTime());
-            if (snake.Score() > highScores.snake) {
-                highScores.snake = snake.Score();
-                if (!SaveHighScores(highScores)) {
-                    TraceLog(LOG_WARNING, "Could not save high scores: %s", highScoresPath);
-                }
-            }
+            highScores.snake = std::max(highScores.snake, snake.Score());
         } else if (screen == Screen::Tetris) {
             games::tetris::UpdateFromInput(tetris, GetFrameTime());
-            if (tetris.Score() > highScores.tetris) {
-                highScores.tetris = tetris.Score();
-                if (!SaveHighScores(highScores)) {
-                    TraceLog(LOG_WARNING, "Could not save high scores: %s", highScoresPath);
+            highScores.tetris = std::max(highScores.tetris, tetris.Score());
+        } else if (screen == Screen::Breakout) {
+            games::breakout::UpdateFromInput(breakout, GetFrameTime());
+            highScores.breakout = std::max(highScores.breakout, breakout.Score());
+        } else if (screen == Screen::Minesweeper) {
+            games::minesweeper::UpdateFromInput(minesweeper, GetFrameTime());
+            if (minesweeper.State() == games::minesweeper::Status::Won) {
+                const int milliseconds = std::max(1, minesweeper.ElapsedMilliseconds());
+                if (highScores.minesweeperBestMilliseconds == 0 ||
+                    milliseconds < highScores.minesweeperBestMilliseconds) {
+                    highScores.minesweeperBestMilliseconds = milliseconds;
                 }
             }
+        }
+        const bool recordsChanged = highScores.snake != previousScores.snake ||
+            highScores.tetris != previousScores.tetris ||
+            highScores.breakout != previousScores.breakout ||
+            highScores.minesweeperBestMilliseconds != previousScores.minesweeperBestMilliseconds;
+        if (recordsChanged && !SaveHighScores(highScores)) {
+            TraceLog(LOG_WARNING, "Could not save high scores: %s", highScoresPath);
         }
 
         BeginDrawing();
@@ -79,6 +98,11 @@ int Run() {
         } else if (screen == Screen::Tetris) {
             games::tetris::DrawScreen(tetris, font, settings.language,
                                       highScores.tetris);
+        } else if (screen == Screen::Breakout) {
+            games::breakout::DrawScreen(breakout, font, settings.language, highScores.breakout);
+        } else if (screen == Screen::Minesweeper) {
+            games::minesweeper::DrawScreen(minesweeper, font, settings.language,
+                                          highScores.minesweeperBestMilliseconds);
         } else {
             result = ui::DrawMenu(screen, font, settings);
         }
@@ -114,6 +138,14 @@ int Run() {
                 screen = Screen::Tetris;
                 break;
             case ui::MenuAction::Back: screen = Screen::MainMenu; break;
+            case ui::MenuAction::StartBreakout:
+                breakout.Reset();
+                screen = Screen::Breakout;
+                break;
+            case ui::MenuAction::StartMinesweeper:
+                minesweeper.Reset();
+                screen = Screen::Minesweeper;
+                break;
             case ui::MenuAction::Quit: running = false; break;
             case ui::MenuAction::None: break;
         }

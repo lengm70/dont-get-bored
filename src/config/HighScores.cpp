@@ -40,6 +40,8 @@ bool LoadHighScores(HighScores& scores, const std::filesystem::path& path) {
         const std::string value = Trim(line.substr(separator + 1));
         if (key == "snake") ParseScore(value, loaded.snake);
         else if (key == "tetris") ParseScore(value, loaded.tetris);
+        else if (key == "breakout") ParseScore(value, loaded.breakout);
+        else if (key == "minesweeper_best_ms") ParseScore(value, loaded.minesweeperBestMilliseconds);
     }
     if (input.bad()) return false;
     scores = loaded;
@@ -47,7 +49,8 @@ bool LoadHighScores(HighScores& scores, const std::filesystem::path& path) {
 }
 
 bool SaveHighScores(const HighScores& scores, const std::filesystem::path& path) {
-    if (scores.snake < 0 || scores.tetris < 0) return false;
+    if (scores.snake < 0 || scores.tetris < 0 || scores.breakout < 0 ||
+        scores.minesweeperBestMilliseconds < 0) return false;
     std::error_code error;
     const auto parent = path.parent_path();
     if (!parent.empty()) std::filesystem::create_directories(parent, error);
@@ -57,7 +60,9 @@ bool SaveHighScores(const HighScores& scores, const std::filesystem::path& path)
     if (!output) return false;
     output << "# don't get bored high scores\n"
            << "snake=" << scores.snake << '\n'
-           << "tetris=" << scores.tetris << '\n';
+           << "tetris=" << scores.tetris << '\n'
+           << "breakout=" << scores.breakout << '\n'
+           << "minesweeper_best_ms=" << scores.minesweeperBestMilliseconds << '\n';
     output.close();
     return output.good();
 }

@@ -124,9 +124,12 @@ void DrawNextPiece(PieceType piece, Font font,
 }  // namespace
 
 void UpdateFromInput(TetrisGame& game, float elapsedSeconds) {
-    if (IsKeyPressed(KEY_R)) game.Reset();
-    if (IsKeyPressed(KEY_ENTER)) game.Start();
-    if (IsKeyPressed(KEY_P)) game.TogglePause();
+    if (IsKeyPressed(KEY_R)) { game.Reset(); return; }
+    if (IsKeyPressed(KEY_SPACE) && game.State() == Status::Ready) {
+        game.Start();
+        return;  // Starting must not also hard-drop the first piece.
+    }
+    if (IsKeyPressed(KEY_P)) { game.TogglePause(); return; }
 
     if (IsKeyPressed(KEY_LEFT) || IsKeyPressedRepeat(KEY_LEFT) ||
         IsKeyPressed(KEY_A) || IsKeyPressedRepeat(KEY_A)) {

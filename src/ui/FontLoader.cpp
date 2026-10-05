@@ -36,6 +36,12 @@ Font LoadMenuFont() {
     for (const auto* labels : {&text::tetrisChinese, &text::tetrisEnglish}) {
         for (const char* label : text::AllLabels(*labels)) collect(label);
     }
+    for (const auto* labels : {&text::breakoutChinese, &text::breakoutEnglish}) {
+        for (const char* label : text::AllLabels(*labels)) collect(label);
+    }
+    for (const auto* labels : {&text::minesweeperChinese, &text::minesweeperEnglish}) {
+        for (const char* label : text::AllLabels(*labels)) collect(label);
+    }
 
     std::sort(codepoints.begin(), codepoints.end());
     codepoints.erase(std::unique(codepoints.begin(), codepoints.end()), codepoints.end());

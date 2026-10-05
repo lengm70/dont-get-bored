@@ -7,7 +7,8 @@
 namespace ui {
 
 enum class MenuAction {
-    None, OpenGameSelection, OpenSettings, StartSnake, StartTetris, Back, Quit
+    None, OpenGameSelection, OpenSettings, StartSnake, StartTetris,
+    StartBreakout, StartMinesweeper, Back, Quit
 };
 
 struct MenuResult {

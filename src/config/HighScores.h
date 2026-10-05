@@ -7,6 +7,8 @@ namespace app {
 struct HighScores {
     int snake = 0;
     int tetris = 0;
+    int breakout = 0;
+    int minesweeperBestMilliseconds = 0;  // Zero means no completed game yet.
 };
 
 inline constexpr const char* highScoresPath = "config/highscores.ini";

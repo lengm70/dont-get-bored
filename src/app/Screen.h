@@ -2,6 +2,6 @@
 
 namespace app {
 
-enum class Screen { MainMenu, GameSelection, Settings, Snake, Tetris };
+enum class Screen { MainMenu, GameSelection, Settings, Snake, Tetris, Breakout, Minesweeper };
 
 }  // namespace app
