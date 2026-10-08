@@ -8,7 +8,7 @@
 
 namespace ui {
 
-Font LoadMenuFont() {
+Font LoadMenuFont(const std::vector<std::string>& additionalText) {
     if (!FileExists(config::fontPath)) {
         TraceLog(LOG_ERROR, "Missing menu font: %s", config::fontPath);
         return {};
@@ -46,6 +46,16 @@ Font LoadMenuFont() {
         for (const char* label : text::AllLabels(*labels)) collect(label);
     }
 
+    for (const auto* labels : {&text::minesweeperSetupChinese, &text::minesweeperSetupEnglish}) {
+        for (const char* label : text::AllLabels(*labels)) collect(label);
+    }
+    for (const auto* labels : {&text::gomokuChinese, &text::gomokuEnglish}) {
+        for (const char* label : text::AllLabels(*labels)) collect(label);
+    }
+    for (const auto* labels : {&text::mediaChinese, &text::mediaEnglish}) {
+        for (const char* label : text::AllLabels(*labels)) collect(label);
+    }
+    for (const auto& value : additionalText) collect(value.c_str());
     std::sort(codepoints.begin(), codepoints.end());
     codepoints.erase(std::unique(codepoints.begin(), codepoints.end()), codepoints.end());
 

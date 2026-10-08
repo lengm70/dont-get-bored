@@ -1,6 +1,51 @@
 # don't get bored
 
-A C++17 GUI collection with Snake, Tetris, Breakout, and Minesweeper, with Chinese and English menus. Every game starts with **Space** from its ready screen.
+A C++17 GUI collection with Snake, Tetris, Breakout, Minesweeper, and Gomoku, with Chinese and English menus. Every game starts with **Space** from its ready screen.
+
+## Gomoku
+
+Choose **Gomoku / 五子棋**, select Two players or Vs computer, then press Space or click Start game. Black plays first on a 15x15 board. Left-click near an intersection to place a stone. Five or more consecutive stones horizontally, vertically or diagonally wins; there are no forbidden moves. A full board without a winner is a draw. R resets the board to Ready; press Space to start again. Esc returns to game selection.
+
+In computer mode you play Black. Easy, Normal and Hard use pattern evaluation and iterative Alpha-Beta search with maximum depths of 1, 3 and 5, and time budgets of 120, 500 and 1200 ms. Actual depth depends on the position and budget; these are search settings, not guaranteed skill ratings. The computer takes immediate wins and blocks immediate losses before considering other moves. Search runs on a board snapshot in a background worker, with cancellation on restart or leaving the game.
+
+The Gomoku module separates rules/state (`GomokuGame`), search (`GomokuAI`), worker lifetime (`GomokuAiTurn`), presentation constants (`GomokuConfig`) and input/rendering (`GomokuScreen`). Tests cover win directions, overlines, draws, tactical replies, cancellation and mouse mapping.
+
+## Public release: v0.2.2
+
+- Five games, including two-player and computer Gomoku with three AI levels.
+- Minesweeper preset/custom difficulties and separate persistent preset records.
+- Draggable music player and persistent libraries for main backgrounds, player backdrops and music.
+- Automatic UI colors derived from the selected main background.
+- Windows application/taskbar icon and improved input, background import and Breakout drawing.
+- Six CTest targets covering rules, input, AI, media persistence, image replacement and theme contrast.
+
+Download the full Windows x64 ZIP from [GitHub Releases](https://github.com/lengm70/dont-get-bored/releases/tag/v0.2.2), extract it and run `dont_get_bored.exe`. Keep the DLLs and assets beside the EXE.
+
+## Development history: v0.3.0-beta.3
+
+- UI colors adapt automatically to the main background's dominant hue.
+- Menus, controls, cards and game surfaces share the generated palette.
+- Dark surfaces and bright text keep the interface readable across background colors.
+- Grayscale and transparent images use neutral colors; failed imports preserve the current theme.
+- The theme is restored from the saved background on startup.
+- Distributed only from the private development repository.
+
+## Previous internal beta: v0.3.0-beta.2
+
+- Gomoku with two-player and computer modes.
+- Custom player backdrops and persistent media libraries for backgrounds and music.
+- Reuse previous imports or restore defaults; imported files are stored locally.
+- Breakout now scales and clips the playfield and ball to the game panel.
+- Distributed only from the private development repository.
+
+## Previous internal beta: v0.3.0-beta.1
+
+- Minesweeper difficulty selection: Easy (9x9, 10 mines), Normal (16x16, 40 mines), Hard (30x16, 99 mines).
+- Custom boards: 5-40 columns, 5-30 rows, 1 to (columns * rows - 9) mines.
+- First reveal and its neighbors remain safe; boards scale to fit the window.
+- Each preset keeps a separate best winning time. Custom games never create records.
+- Legacy Minesweeper records migrate to Easy. Existing settings and other games' scores remain compatible.
+- This beta is distributed only from the private development repository.
 
 ## What's new in v0.2.1
 
@@ -8,10 +53,6 @@ A C++17 GUI collection with Snake, Tetris, Breakout, and Minesweeper, with Chine
 - Illustrated game selection cards with hover feedback and localized descriptions.
 - Snake head eyes follow its direction; body colors fade clearly from head to tail.
 - Background artwork loads once and preserves its aspect ratio at different window sizes.
-
-## Download for Windows
-
-Download `dont-get-bored-windows-x64.zip` from the [latest release](https://github.com/lengm70/dont-get-bored/releases/latest), extract the entire archive, and run `dont_get_bored.exe` in the extracted folder. Keep the DLL files and `assets` folder beside the program. The separate EXE asset requires those dependencies. Source code archives are available on the release page.
 
 ## Snake
 
@@ -29,13 +70,27 @@ Choose **Breakout / 打砖块**. Move the paddle with Left/Right or A/D, and pre
 
 ## Minesweeper
 
-Choose **Minesweeper / 扫雷**, then press Space to start the 9×9 board with 10 mines. Left-click to reveal and right-click to place or remove a flag. Mines are placed on the first reveal, keeping that cell and its neighbors safe. Empty areas open automatically. Clicking a revealed number opens its remaining neighbors when the adjacent flag count matches the number; incorrect flags can cause a loss. Reveal every safe cell to win. Press P to pause or resume, R to reset, and Esc to return. The timer begins on the first reveal and stops while paused or after the game ends.
+Choose **Minesweeper / 扫雷**, select Easy, Normal, Hard or Custom, then press Space or click Start game. Custom controls change columns, rows and mine count. Click a value to edit it, and press Enter or click outside to finish editing before starting. Left-click to reveal and right-click to place or remove a flag. Mines are placed on the first reveal, keeping that cell and its neighbors safe. Empty areas open automatically. Clicking a revealed number opens its remaining neighbors when the adjacent flag count matches the number; incorrect flags can cause a loss. Reveal every safe cell to win. Press P to pause or resume, R to reset, and Esc to return. The timer begins on the first reveal and stops while paused or after the game ends.
 
 ## High scores
 
-Snake, Tetris, and Breakout each keep their own best score. Minesweeper keeps the shortest winning time in milliseconds (`minesweeper_best_ms`, where zero means no record yet). Records are stored in `config/highscores.ini` and remain after restarting. Existing Snake/Tetris records load without migration; missing new keys default to zero. This personal file is ignored by Git; `config/highscores.example.ini` shows the defaults.
+Snake, Tetris, and Breakout each keep their own best score. Minesweeper keeps separate shortest winning times in milliseconds for Easy, Normal and Hard (`minesweeper_easy_ms`, `minesweeper_normal_ms`, `minesweeper_hard_ms`; zero means no record yet). Custom games are not recorded. Old `minesweeper_best_ms` records migrate to Easy. Records are stored in `config/highscores.ini` and remain after restarting. Existing Snake/Tetris records load without migration; missing new keys default to zero. This personal file is ignored by Git; `config/highscores.example.ini` shows the defaults.
 
 ## Settings
+
+### Automatic UI theme
+
+Loading or selecting a main background extracts its dominant hue and updates menus, controls, cards and game surfaces. The palette keeps dark panels and bright text for readability. Grayscale and transparent images produce a neutral theme. Analysis runs once per successful background change; failed imports keep the previous theme. Player backdrops do not change the global theme. The theme is recreated from the saved background at startup.
+
+### Music and custom backgrounds
+
+The Media Library provides separate histories for the main background, player backdrop and background music. Open it from Basic settings (background) or Music settings (music/player backdrop). Select a saved entry and click Use selected, or Restore default. Add file imports and immediately selects a validated file. Previous/Next on the player cycles through the default track and saved music, skipping unavailable files.
+
+New imports are copied into `config/media/` under content-based filenames, so deleting the original source does not lose them. The catalog in `config/media/library.txt` and the current selections in `config/settings.ini` survive restarting. The entire personal media folder is ignored by Git. Existing custom paths are remembered when first upgrading; those legacy files must remain available until re-imported. Failed imports keep the current selection and never replace older history entries.
+
+The floating player supports pause/resume and dragging its header. Player mouse input is captured before menus and mouse-controlled games, including Minesweeper and Gomoku.
+
+Music volume and all three current media selections are saved in the local settings file. Missing legacy files fall back to defaults on startup and remain listed so they can be identified and re-imported.
 
 The settings page supports Chinese and English, 720p (1280×720), 1080p (1920×1080), 2K (2560×1440), and 4K (3840×2160), plus FPS caps of 60, 120, 165, and 240. The default is Chinese, 1080p, and 60 FPS. Changes apply immediately and are saved in `config/settings.ini` for the next launch. The FPS counter toggle is saved there too. This personal file is ignored by Git; `config/settings.example.ini` shows the defaults.
 
@@ -51,7 +106,7 @@ pacman -S mingw-w64-ucrt-x86_64-raylib mingw-w64-ucrt-x86_64-cmake mingw-w64-ucr
 
 raygui 5.0 is included in `external/raygui.h` under its zlib license (`external/raygui-LICENSE`). Its implementation lives only in `src/ui/raygui_impl.cpp`.
 
-The menu font is a subset of [Noto Sans SC](https://github.com/google/fonts/tree/main/ofl/notosanssc), licensed under the SIL Open Font License in `assets/fonts/OFL.txt`. The included font contains the current Chinese labels and ASCII characters; add new glyphs to the font asset when adding new text.
+The menu font is a subset of [Noto Sans SC](https://github.com/google/fonts/tree/main/ofl/notosanssc), licensed under the SIL Open Font License in `assets/fonts/OFL.txt`. It includes UI labels, ASCII and the basic Chinese characters supported by the source font, so common imported filenames display correctly. Only UI and media filename glyphs are loaded into the runtime atlas; adding other scripts may require expanding the font asset.
 
 ## Project structure
 

@@ -26,12 +26,12 @@ inline constexpr float eyeForwardOffset = 4.0f;
 inline constexpr float eyeSideOffset = 4.0f;
 inline constexpr float foodRadius = 7.0f;
 
-inline constexpr Color boardColor = ui::palette::board;
-inline constexpr Color gridColor = ui::palette::grid;
+inline const Color& boardColor = ui::palette::board;
+inline const Color& gridColor = ui::palette::grid;
 inline constexpr Color headColor{91, 226, 204, 255};
 inline constexpr Color tailColor{35, 95, 88, 255};
 inline constexpr Color eyeColor{12, 31, 40, 255};
 inline constexpr Color foodColor{255, 138, 112, 255};
-inline constexpr Color overlayColor = ui::palette::overlay;
+inline const Color& overlayColor = ui::palette::overlay;
 
 }  // namespace games::snake::config

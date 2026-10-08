@@ -32,6 +32,8 @@ bool LoadHighScores(HighScores& scores, const std::filesystem::path& path) {
     if (!input) return false;
 
     HighScores loaded;
+    int legacyMinesweeper = 0;
+    bool hasEasyRecord = false;
     std::string line;
     while (std::getline(input, line)) {
         const auto separator = line.find('=');
@@ -41,16 +43,23 @@ bool LoadHighScores(HighScores& scores, const std::filesystem::path& path) {
         if (key == "snake") ParseScore(value, loaded.snake);
         else if (key == "tetris") ParseScore(value, loaded.tetris);
         else if (key == "breakout") ParseScore(value, loaded.breakout);
-        else if (key == "minesweeper_best_ms") ParseScore(value, loaded.minesweeperBestMilliseconds);
+        else if (key == "minesweeper_best_ms") ParseScore(value, legacyMinesweeper);
+        else if (key == "minesweeper_easy_ms") {
+            hasEasyRecord |= ParseScore(value, loaded.minesweeperEasyMilliseconds);
+        }
+        else if (key == "minesweeper_normal_ms") ParseScore(value, loaded.minesweeperNormalMilliseconds);
+        else if (key == "minesweeper_hard_ms") ParseScore(value, loaded.minesweeperHardMilliseconds);
     }
     if (input.bad()) return false;
+    if (!hasEasyRecord) loaded.minesweeperEasyMilliseconds = legacyMinesweeper;
     scores = loaded;
     return true;
 }
 
 bool SaveHighScores(const HighScores& scores, const std::filesystem::path& path) {
     if (scores.snake < 0 || scores.tetris < 0 || scores.breakout < 0 ||
-        scores.minesweeperBestMilliseconds < 0) return false;
+        scores.minesweeperEasyMilliseconds < 0 || scores.minesweeperNormalMilliseconds < 0 ||
+        scores.minesweeperHardMilliseconds < 0) return false;
     std::error_code error;
     const auto parent = path.parent_path();
     if (!parent.empty()) std::filesystem::create_directories(parent, error);
@@ -62,9 +71,39 @@ bool SaveHighScores(const HighScores& scores, const std::filesystem::path& path)
            << "snake=" << scores.snake << '\n'
            << "tetris=" << scores.tetris << '\n'
            << "breakout=" << scores.breakout << '\n'
-           << "minesweeper_best_ms=" << scores.minesweeperBestMilliseconds << '\n';
+           << "minesweeper_easy_ms=" << scores.minesweeperEasyMilliseconds << '\n'
+           << "minesweeper_normal_ms=" << scores.minesweeperNormalMilliseconds << '\n'
+           << "minesweeper_hard_ms=" << scores.minesweeperHardMilliseconds << '\n';
     output.close();
     return output.good();
+}
+
+int MinesweeperBest(const HighScores& scores, games::minesweeper::Difficulty level) {
+    using games::minesweeper::Difficulty;
+    switch (level) {
+        case Difficulty::Easy: return scores.minesweeperEasyMilliseconds;
+        case Difficulty::Normal: return scores.minesweeperNormalMilliseconds;
+        case Difficulty::Hard: return scores.minesweeperHardMilliseconds;
+        case Difficulty::Custom: return 0;
+    }
+    return 0;
+}
+
+bool RecordMinesweeperWin(HighScores& scores, games::minesweeper::Difficulty level,
+                         int milliseconds) {
+    using games::minesweeper::Difficulty;
+    if (milliseconds <= 0) return false;
+    int* record = nullptr;
+    switch (level) {
+        case Difficulty::Easy: record = &scores.minesweeperEasyMilliseconds; break;
+        case Difficulty::Normal: record = &scores.minesweeperNormalMilliseconds; break;
+        case Difficulty::Hard: record = &scores.minesweeperHardMilliseconds; break;
+        case Difficulty::Custom: return false;
+        default: return false;
+    }
+    if (*record != 0 && *record <= milliseconds) return false;
+    *record = milliseconds;
+    return true;
 }
 
 }  // namespace app

@@ -126,6 +126,23 @@ void DrawMinesweeper(const Canvas& canvas, Font font) {
     }
 }
 
+void DrawGomoku(const Canvas& canvas) {
+    constexpr float origin = 20, spacing = 20, end = 140, radius = 8;
+    constexpr int lines = 7;
+    for (int index = 0; index < lines; ++index) {
+        const float position = origin + index * spacing;
+        canvas.Line({origin, position}, {end, position}, 1, selection::artGridColor);
+        canvas.Line({position, origin}, {position, end}, 1, selection::artGridColor);
+    }
+    constexpr std::array<Vector2, 4> black{{{40, 40}, {60, 60}, {80, 80}, {100, 100}}};
+    constexpr std::array<Vector2, 4> white{{{60, 40}, {80, 60}, {100, 60}, {60, 100}}};
+    for (Vector2 point : black) {
+        canvas.Circle(point, radius + 1, selection::purple);
+        canvas.Circle(point, radius, Color{24, 16, 36, 255});
+    }
+    for (Vector2 point : white) canvas.Circle(point, radius, WHITE);
+    canvas.Circle(black.back(), 2, selection::purple);
+}
 }  // namespace
 
 void DrawGameIllustration(GameIllustration game, Rectangle bounds, Font font) {
@@ -137,6 +154,7 @@ void DrawGameIllustration(GameIllustration game, Rectangle bounds, Font font) {
         case GameIllustration::Tetris: DrawTetris(canvas); break;
         case GameIllustration::Breakout: DrawBreakout(canvas); break;
         case GameIllustration::Minesweeper: DrawMinesweeper(canvas, font); break;
+        case GameIllustration::Gomoku: DrawGomoku(canvas); break;
     }
 }
 

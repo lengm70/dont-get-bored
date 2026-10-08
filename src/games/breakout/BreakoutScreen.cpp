@@ -1,5 +1,6 @@
 #include "games/breakout/BreakoutScreen.h"
 
+#include <cmath>
 #include <string>
 
 #include "config/UiConfig.h"
@@ -55,7 +56,7 @@ void DrawScreen(const BreakoutGame& game, Font font, app::Language language,
                 int bestScore) {
     const ui::UiLayout layout = ui::CurrentLayout();
     const auto& labels = ui::text::BreakoutForLanguage(language);
-    ui::DrawBackground(layout, false);
+    ui::DrawBackground(layout, false, config::gamePanel);
     ui::DrawCenteredText(font, labels.name, config::titleY, config::titleSize,
                          ui::config::textColor, layout);
     const std::string stats = std::string(labels.score) + ": " + std::to_string(game.Score()) +
@@ -65,6 +66,13 @@ void DrawScreen(const BreakoutGame& game, Font font, app::Language language,
                          ui::config::mutedColor, layout);
     const Rectangle board = ToScreen({0, 0, rules::boardWidth, rules::boardHeight}, layout);
     DrawRectangleRec(board, config::boardColor);
+    // A missed ball may leave the board before life-loss detection, including
+    // the final frozen frame. Keep all gameplay drawing inside the board.
+    const int clipX = static_cast<int>(std::ceil(board.x));
+    const int clipY = static_cast<int>(std::ceil(board.y));
+    BeginScissorMode(clipX, clipY,
+        static_cast<int>(std::floor(board.x + board.width)) - clipX,
+        static_cast<int>(std::floor(board.y + board.height)) - clipY);
     for (int index = 0; index < rules::brickCount; ++index) {
         if (game.Bricks()[index]) {
             DrawRectangleRec(ToScreen(BreakoutGame::BrickBounds(index), layout),
@@ -75,8 +83,9 @@ void DrawScreen(const BreakoutGame& game, Font font, app::Language language,
     const Point ball = game.Ball();
     DrawCircleV(layout.Point(config::boardX + ball.x, config::boardY + ball.y),
                 rules::ballRadius * layout.scale, config::ballColor);
-    DrawRectangleLinesEx(board, config::borderWidth * layout.scale, ui::config::accentColor);
     DrawOverlay(game, font, labels, layout);
+    EndScissorMode();
+    DrawRectangleLinesEx(board, config::borderWidth * layout.scale, ui::config::accentColor);
     ui::DrawCenteredText(font, labels.controlsHint, config::footerY, config::footerSize,
                          ui::config::mutedColor, layout);
 }

@@ -5,6 +5,9 @@
 !/.vscode/c_cpp_properties.json
 /config/settings.ini
 /config/highscores.ini
+/config/media/
+/assets/backgrounds/custom.*
+/assets/backgrounds/import-*
 *.exe
 *.o
 *.obj

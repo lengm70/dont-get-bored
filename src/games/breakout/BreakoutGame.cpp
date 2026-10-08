@@ -24,6 +24,19 @@ void BreakoutGame::PrepareServe() {
                                              rules::serveHorizontalRatio)};
 }
 
+void BreakoutGame::DeflectFromPaddle() {
+    // A small random turn prevents the ball from repeating the same paddle path.
+    randomState_ = randomState_ * 1664525u + 1013904223u;
+    const float unit = static_cast<float>(randomState_ >> 8) / 16777216.0f;
+    const float magnitude = rules::paddleDeflectionMin + unit *
+        (rules::paddleDeflectionMax - rules::paddleDeflectionMin);
+    const float angle = (randomState_ & 1u) == 0 ? magnitude : -magnitude;
+    const float cosine = std::cos(angle);
+    const float sine = std::sin(angle);
+    velocity_ = {velocity_.x * cosine - velocity_.y * sine,
+                 velocity_.x * sine + velocity_.y * cosine};
+}
+
 void BreakoutGame::Start() {
     if (status_ == Status::Ready) status_ = Status::Playing;
 }
@@ -95,7 +108,10 @@ void BreakoutGame::Step(float seconds, float horizontalInput) {
         velocity_.y = std::abs(velocity_.y);
     }
 
-    BounceOffPaddle(ball_, velocity_, Paddle(), (paddleX_ - previousPaddleX) / seconds);
+    const float paddleVelocityX = (paddleX_ - previousPaddleX) / seconds;
+    if (BounceOffPaddle(ball_, velocity_, Paddle(), paddleVelocityX)) {
+        DeflectFromPaddle();
+    }
     for (int index = 0; index < rules::brickCount; ++index) {
         if (bricks_[index] && BounceOffBrick(BrickBounds(index), previous)) {
             bricks_[index] = false;

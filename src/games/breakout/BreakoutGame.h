@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <cstdint>
 
 #include "games/breakout/BreakoutCollision.h"
 #include "games/breakout/BreakoutRules.h"
@@ -32,12 +33,14 @@ private:
     void PrepareServe();
     void Step(float seconds, float horizontalInput);
     bool BounceOffBrick(Bounds brick, Point previous);
+    void DeflectFromPaddle();
 
     std::array<bool, rules::brickCount> bricks_{};
     Status status_ = Status::Ready;
     Point ball_{};
     Point velocity_{};
     float paddleX_ = 0.0f;
+    std::uint32_t randomState_ = 0x9e3779b9u;
     int score_ = 0;
     int lives_ = rules::initialLives;
 };

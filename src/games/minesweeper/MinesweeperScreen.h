@@ -6,7 +6,7 @@
 
 namespace games::minesweeper {
 
-void UpdateFromInput(MinesweeperGame& game, float elapsedSeconds);
+void UpdateFromInput(MinesweeperGame& game, float elapsedSeconds, bool mouseCaptured = false);
 void DrawScreen(const MinesweeperGame& game, Font font, app::Language language,
                 int bestMilliseconds);
 

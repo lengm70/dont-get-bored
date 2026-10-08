@@ -1,6 +1,8 @@
 #include "ui/MenuView.h"
 
+#include <algorithm>
 #include <array>
+#include <cstdio>
 
 #include "raygui.h"
 #include "config/UiConfig.h"
@@ -10,9 +12,12 @@
 #include "ui/Theme.h"
 #include "ui/UiLayout.h"
 #include "ui/UiText.h"
+#include "ui/MusicPlayerInput.h"
+#include "ui/PlayerBackground.h"
 
 namespace ui {
 namespace {
+MusicPlayerInput musicPlayerInput;
 
 void DrawRowLabel(Font font, const char* label, int row, const UiLayout& layout) {
     const int y = config::settingsRowY + row * config::settingsRowGap +
@@ -58,6 +63,9 @@ MenuResult DrawSettings(Font font, app::Settings& settings,
                         const text::Labels& labels, const UiLayout& layout) {
     DrawCenteredText(font, labels.settings, config::pageTitleY,
                      config::pageTitleSize, config::textColor, layout);
+    const MenuAction tabAction = GuiButton(layout.Rect({330, 160, 140, 40}), labels.basic)
+        ? MenuAction::OpenSettings : GuiButton(layout.Rect({490, 160, 140, 40}), labels.music)
+        ? MenuAction::OpenMusicSettings : MenuAction::None;
 
     bool changed = false;
     DrawRowLabel(font, labels.language, 0, layout);
@@ -85,6 +93,10 @@ MenuResult DrawSettings(Font font, app::Settings& settings,
         changed = true;
     }
 
+    DrawRowLabel(font, labels.background, 3, layout);
+    const MenuAction backgroundAction = GuiButton(SettingsControl(3, layout), text::MediaForLanguage(settings.language).title)
+        ? MenuAction::OpenMediaLibrary : MenuAction::None;
+
     const bool previousShowFps = settings.showFps;
     GuiCheckBox(layout.Rect(config::fpsCheckBox), labels.showFps, &settings.showFps);
     changed |= settings.showFps != previousShowFps;
@@ -92,7 +104,35 @@ MenuResult DrawSettings(Font font, app::Settings& settings,
     const MenuAction action = GuiButton(
         CenteredButton(config::backButtonY, config::backButtonWidth, layout), labels.back)
         ? MenuAction::Back : MenuAction::None;
-    return {action, changed};
+    return {tabAction != MenuAction::None ? tabAction :
+            backgroundAction != MenuAction::None ? backgroundAction : action, changed, 0};
+}
+
+MenuResult DrawMusicSettings(Font font, app::Settings& settings,
+                             const text::Labels& labels, const UiLayout& layout) {
+    DrawCenteredText(font, labels.music, config::pageTitleY, config::pageTitleSize,
+                     config::textColor, layout);
+    const MenuAction tabAction = GuiButton(layout.Rect({330, 160, 140, 40}), labels.basic)
+        ? MenuAction::OpenSettings : GuiButton(layout.Rect({490, 160, 140, 40}), labels.music)
+        ? MenuAction::OpenMusicSettings : MenuAction::None;
+    DrawRowLabel(font, labels.music, 0, layout);
+    const MenuAction importAction = GuiButton(SettingsControl(0, layout), text::MediaForLanguage(settings.language).title)
+        ? MenuAction::OpenMediaLibrary : MenuAction::None;
+    DrawRowLabel(font, labels.musicVolume, 1, layout);
+    const float previousVolume = settings.musicVolume;
+    const bool playerBackdrop = GuiButton(SettingsControl(2, layout),
+        settings.language == app::Language::Chinese ? "播放器背景" : "Player backdrop");
+    char volumeText[8]{};
+    std::snprintf(volumeText, sizeof(volumeText), "%d%%",
+                  static_cast<int>(settings.musicVolume * 100.0f + 0.5f));
+    GuiSlider(SettingsControl(1, layout), nullptr, nullptr, &settings.musicVolume, 0.0f, 1.0f);
+    DrawScaledText(font, volumeText, config::settingsControlX + 108,
+                   config::settingsRowY + config::settingsRowGap + 10, 18, config::textColor, layout);
+    const MenuAction action = GuiButton(
+        CenteredButton(config::backButtonY, config::backButtonWidth, layout), labels.back)
+        ? MenuAction::Back : MenuAction::None;
+    return {tabAction != MenuAction::None ? tabAction : playerBackdrop ? MenuAction::OpenMediaLibrary : importAction != MenuAction::None ? importAction : action,
+            settings.musicVolume != previousVolume, playerBackdrop ? 1 : 2};
 }
 
 }  // namespace
@@ -107,12 +147,56 @@ MenuResult DrawMenu(app::Screen screen, Font font, app::Settings& settings) {
         case app::Screen::GameSelection:
             return DrawGameSelection(font, settings.language, layout);
         case app::Screen::Settings: return DrawSettings(font, settings, labels, layout);
+        case app::Screen::MediaLibrary: break;
+        case app::Screen::MusicSettings: return DrawMusicSettings(font, settings, labels, layout);
         case app::Screen::Snake: break;
         case app::Screen::Tetris: break;
         case app::Screen::Breakout: break;
         case app::Screen::Minesweeper: break;
+        case app::Screen::MinesweeperSetup: break;
+        case app::Screen::Gomoku: break;
+        case app::Screen::GomokuSetup: break;
     }
     return {};
+}
+
+bool UpdateMusicPlayerInput() {
+    return musicPlayerInput.Update(CurrentLayout(), GetMousePosition(),
+                                   IsMouseButtonPressed(MOUSE_BUTTON_LEFT),
+                                   IsMouseButtonDown(MOUSE_BUTTON_LEFT));
+}
+
+MenuResult DrawMusicPlayer(Font font, app::Settings& settings) {
+    const UiLayout layout = CurrentLayout();
+    const auto& labels = text::ForLanguage(settings.language);
+    const Rectangle design = musicPlayerInput.DesignBounds();
+    const Rectangle panel = layout.Rect(design);
+    DrawPlayerBackground(panel);
+    DrawRectangleRounded(panel, 0.08f, 8, ColorAlpha(BLACK, 0.30f));
+    DrawRectangleRoundedLinesEx(panel, 0.08f, 8, 1.0f * layout.scale, config::borderNormal);
+    DrawScaledText(font, labels.music, design.x + 12, design.y + 8,
+                   15, config::textColor, layout);
+    const float x = design.x + 8;
+    const float width = (design.width - 32) / 3.0f;
+    MenuAction action = MenuAction::None;
+    if (GuiButton(layout.Rect({x, design.y + 42, width, 30}), labels.previousMusic)) {
+        action = MenuAction::PreviousMusic;
+    }
+    if (GuiButton(layout.Rect({x + width + 8, design.y + 42, width, 30}), labels.playPause)) {
+        action = MenuAction::ToggleMusic;
+    }
+    if (GuiButton(layout.Rect({x + 2 * (width + 8), design.y + 42, width, 30}), labels.nextMusic)) {
+        action = MenuAction::NextMusic;
+    }
+    char volumeText[8]{};
+    std::snprintf(volumeText, sizeof(volumeText), "%d%%",
+                  static_cast<int>(settings.musicVolume * 100.0f + 0.5f));
+    const float previousVolume = settings.musicVolume;
+    GuiSlider(layout.Rect({x, design.y + 88, design.width - 16, 24}), nullptr, nullptr,
+              &settings.musicVolume, 0.0f, 1.0f);
+    DrawScaledText(font, volumeText, design.x + design.width / 2 - 14, design.y + 90,
+                   15, config::textColor, layout);
+    return {action, settings.musicVolume != previousVolume};
 }
 
 }  // namespace ui

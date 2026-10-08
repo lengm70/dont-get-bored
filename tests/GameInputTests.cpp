@@ -5,10 +5,14 @@
 #include "raylib.h"
 #include "games/breakout/BreakoutScreen.h"
 #include "games/minesweeper/MinesweeperConfig.h"
+#include "games/minesweeper/MinesweeperLayout.h"
 #include "games/minesweeper/MinesweeperScreen.h"
 #include "games/snake/SnakeScreen.h"
 #include "games/tetris/TetrisScreen.h"
+#include "games/gomoku/GomokuScreen.h"
+#include "games/gomoku/GomokuConfig.h"
 #include "ui/UiLayout.h"
+#include "ui/MusicPlayerInput.h"
 
 namespace {
 std::array<bool, 512> keys{};
@@ -35,6 +39,41 @@ int GetScreenHeight() { return height; }
 
 int main() {
     try {
+        namespace gomoku = games::gomoku;
+        gomoku::GomokuGame gomokuGame;
+        gomoku::GomokuAiTurn ai;
+        Clear(); buttons[MOUSE_BUTTON_LEFT] = true;
+        mouse = ui::CurrentLayout().Point(gomoku::config::boardX, gomoku::config::boardY);
+        gomoku::UpdateFromInput(gomokuGame, ai, gomoku::Strength::Easy);
+        Require(gomokuGame.MoveCount() == 0, "Mouse cannot bypass Gomoku Space start");
+        keys[KEY_SPACE] = true;
+        gomoku::UpdateFromInput(gomokuGame, ai, gomoku::Strength::Easy);
+        Require(gomokuGame.State() == gomoku::Status::Playing && gomokuGame.MoveCount() == 0,
+                "Gomoku Space start does not place a stone");
+        for (const auto size : std::array<std::array<int, 2>, 4>{{
+                 {1280, 720}, {1920, 1080}, {2560, 1440}, {3840, 2160}}}) {
+            width = size[0]; height = size[1];
+            const auto layout = ui::CurrentLayout();
+            for (gomoku::Move cell : {gomoku::Move{0, 0}, {7, 7}, {14, 14}}) {
+                const auto point = layout.Point(gomoku::config::boardX + cell.x * gomoku::config::spacing,
+                                               gomoku::config::boardY + cell.y * gomoku::config::spacing);
+                const auto mapped = gomoku::MoveFromPoint(point, layout);
+                Require(mapped && mapped->x == cell.x && mapped->y == cell.y, "Gomoku intersections map at every resolution");
+            }
+            Require(!gomoku::MoveFromPoint(layout.Point(gomoku::config::boardX - gomoku::config::spacing,
+                                                       gomoku::config::boardY), layout), "Outside Gomoku board rejected");
+        }
+        width = 960; height = 600;
+        Clear(); buttons[MOUSE_BUTTON_LEFT] = true;
+        mouse = ui::CurrentLayout().Point(gomoku::config::boardX, gomoku::config::boardY);
+        gomoku::UpdateFromInput(gomokuGame, ai, gomoku::Strength::Easy, true);
+        Require(gomokuGame.MoveCount() == 0, "Captured player mouse cannot place a Gomoku stone");
+        gomoku::UpdateFromInput(gomokuGame, ai, gomoku::Strength::Easy);
+        Require(gomokuGame.At(0, 0) == gomoku::Stone::Black, "Mouse places on intersection");
+        Clear(); keys[KEY_R] = true;
+        gomoku::UpdateFromInput(gomokuGame, ai, gomoku::Strength::Easy);
+        Require(gomokuGame.State() == gomoku::Status::Ready && gomokuGame.MoveCount() == 0, "R returns Gomoku to ready state");
+        Clear();
         games::snake::SnakeGame snake(42);
         keys[KEY_SPACE] = true;
         games::snake::UpdateFromInput(snake, seconds);
@@ -68,6 +107,36 @@ int main() {
         Require(breakout.State() == games::breakout::Status::Paused, "P pauses Breakout");
 
         namespace mines = games::minesweeper;
+        for (const auto size : std::array<std::array<int, 2>, 5>{{
+                 {960, 600}, {1280, 720}, {1920, 1080}, {2560, 1440}, {3840, 2160}}}) {
+            Clear(); width = size[0]; height = size[1];
+            ui::MusicPlayerInput player;
+            const auto layout = ui::CurrentLayout();
+            mines::MinesweeperGame game(42);
+            game.Configure(mines::Difficulty::Hard);
+            game.Start();
+            mouse = layout.Point(750, 500);
+            buttons[MOUSE_BUTTON_LEFT] = true;
+            mines::UpdateFromInput(game, seconds, player.Update(layout, mouse, true, true));
+            Require(game.RevealedSafeCells() == 0, "Player click must not reveal the board");
+            Clear(); buttons[MOUSE_BUTTON_RIGHT] = true;
+            mines::UpdateFromInput(game, seconds, player.Update(layout, mouse, false, false));
+            Require(game.RemainingMines() == game.MineCount(), "Player right click must not flag the board");
+            Require(player.Update(layout, layout.Point(730, 454), true, true), "Header captures drag");
+            Require(player.Update(layout, layout.Point(300, 250), false, true), "Drag stays captured outside old panel");
+            Require(player.Update(layout, layout.Point(300, 250), false, false), "Drag release stays captured");
+            mouse = layout.Point(320, 296);
+            Clear(); buttons[MOUSE_BUTTON_LEFT] = true;
+            mines::UpdateFromInput(game, seconds, player.Update(layout, mouse, true, true));
+            Require(game.RevealedSafeCells() == 0, "Moved player must use its new bounds");
+            player.Update(layout, mouse, false, false);
+            Require(!player.Update(layout, layout.Point(750, 500), false, false), "Old player position no longer captures input");
+            mines::UpdateFromInput(game, seconds, false);
+            Require(game.RevealedSafeCells() > 0, "Uncaptured board input still works");
+            Clear(); keys[KEY_P] = true;
+            mines::UpdateFromInput(game, seconds, true);
+            Require(game.State() == mines::Status::Paused, "Captured mouse does not suppress keyboard input");
+        }
         for (const auto size : std::array<std::array<int, 2>, 4>{{
                  {1280, 720}, {1920, 1080}, {2560, 1440}, {3840, 2160}}}) {
             Clear(); width = size[0]; height = size[1];
@@ -97,6 +166,29 @@ int main() {
             mines::UpdateFromInput(game, seconds);
             Require(game.State() == mines::Status::Ready && game.RevealedSafeCells() == 0,
                     "R returns Minesweeper to Space-ready state");
+        }
+        for (const auto dimensions : std::array<std::array<int, 2>, 4>{{
+                 {1280, 720}, {1920, 1080}, {2560, 1440}, {3840, 2160}}}) {
+            width = dimensions[0]; height = dimensions[1];
+            for (const auto level : {mines::Difficulty::Normal, mines::Difficulty::Hard, mines::Difficulty::Custom}) {
+                Clear();
+                mines::MinesweeperGame game(42);
+                Require(game.Configure(level, {40, 30, 200}), "Configure scaled board");
+                game.Start();
+                const auto board = mines::LayoutFor(game);
+                const auto layout = ui::CurrentLayout();
+                const auto last = board.Cell(game.Columns() - 1, game.Rows() - 1);
+                mouse = layout.Point(last.x + last.width / 2, last.y + last.height / 2);
+                buttons[MOUSE_BUTTON_RIGHT] = true;
+                mines::UpdateFromInput(game, seconds);
+                Require(game.At(game.Columns() - 1, game.Rows() - 1).flagged,
+                        "Dynamic boards map the last cell correctly at each resolution");
+                mouse = layout.Point(board.bounds.x + board.bounds.width,
+                                     board.bounds.y + board.bounds.height);
+                mines::UpdateFromInput(game, seconds);
+                Require(game.RemainingMines() == game.MineCount() - 1,
+                        "Dynamic board right/bottom edge is rejected");
+            }
         }
         std::cout << "Space start and scaled mouse input tests passed\n";
     } catch (const std::exception& error) {

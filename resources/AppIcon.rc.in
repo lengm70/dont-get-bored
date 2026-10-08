@@ -1,0 +1,2 @@
+1 ICON "@CMAKE_CURRENT_SOURCE_DIR@/assets/icons/app.ico"
+GLFW_ICON ICON "@CMAKE_CURRENT_SOURCE_DIR@/assets/icons/app.ico"

@@ -1,5 +1,6 @@
 #include "config/AppSettings.h"
 
+#include <algorithm>
 #include <fstream>
 #include <string>
 #include <system_error>
@@ -63,6 +64,18 @@ bool LoadSettings(Settings& settings, const std::filesystem::path& path) {
         } else if (key == "show_fps") {
             if (value == "true" || value == "1") loaded.showFps = true;
             else if (value == "false" || value == "0") loaded.showFps = false;
+        } else if (key == "music_path") {
+            loaded.musicPath = value;
+        } else if (key == "background_path") {
+            loaded.backgroundPath = value;
+        } else if (key == "player_background_path") {
+            loaded.playerBackgroundPath = value;
+        } else if (key == "music_volume") {
+            try {
+                loaded.musicVolume = std::clamp(std::stof(value), 0.0f, 1.0f);
+            } catch (const std::exception&) {
+                // Keep the default volume for invalid settings.
+            }
         }
     }
     if (input.bad()) return false;
@@ -82,7 +95,11 @@ bool SaveSettings(const Settings& settings, const std::filesystem::path& path) {
            << "language=" << (settings.language == Language::English ? "en" : "zh") << '\n'
            << "resolution=" << ResolutionId(settings.resolution) << '\n'
            << "fps_limit=" << settings.fpsLimit << '\n'
-           << "show_fps=" << (settings.showFps ? "true" : "false") << '\n';
+           << "show_fps=" << (settings.showFps ? "true" : "false") << '\n'
+           << "music_volume=" << settings.musicVolume << '\n'
+           << "music_path=" << settings.musicPath << '\n'
+           << "background_path=" << settings.backgroundPath << '\n'
+           << "player_background_path=" << settings.playerBackgroundPath << '\n';
     output.close();
     return output.good();
 }

@@ -21,6 +21,9 @@ void ConfigureGuiStyle(Font font, float scale) {
     GuiSetStyle(DEFAULT, TEXT_SIZE, Scaled(config::guiTextSize, scale));
     GuiSetStyle(DEFAULT, BORDER_WIDTH, Scaled(config::guiBorderWidth, scale));
     GuiSetStyle(DEFAULT, TEXT_PADDING, Scaled(config::guiTextPadding, scale));
+    GuiSetStyle(DEFAULT, BACKGROUND_COLOR, ColorToInt(config::baseNormal));
+    GuiSetStyle(LISTVIEW, LIST_ITEMS_HEIGHT, Scaled(config::guiListItemHeight, scale));
+    GuiSetStyle(LISTVIEW, LIST_ITEMS_SPACING, Scaled(config::guiListItemSpacing, scale));
     GuiSetStyle(COMBOBOX, COMBO_BUTTON_WIDTH,
                 Scaled(config::guiComboButtonWidth, scale));
     GuiSetStyle(COMBOBOX, COMBO_BUTTON_SPACING,

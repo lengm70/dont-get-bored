@@ -1,10 +1,11 @@
 #pragma once
 
-#include <array>
+#include <vector>
 #include <cstdint>
 #include <random>
 
 #include "games/minesweeper/MinesweeperRules.h"
+#include "games/minesweeper/MinesweeperDifficulty.h"
 
 namespace games::minesweeper {
 
@@ -17,13 +18,14 @@ struct Cell {
     int adjacentMines = 0;
 };
 
-using Board = std::array<Cell, rules::cellCount>;
+using Board = std::vector<Cell>;
 
 class MinesweeperGame {
 public:
     explicit MinesweeperGame(std::uint32_t seed = std::random_device{}());
 
     void Reset();
+    bool Configure(Difficulty level, BoardSettings custom = difficulty::easy);
     void Start();
     void TogglePause();
     void Reveal(int x, int y);
@@ -32,19 +34,26 @@ public:
     void Update(float elapsedSeconds);
 
     const Board& Cells() const { return board_; }
-    const Cell& At(int x, int y) const { return board_.at(y * rules::columns + x); }
+    const Cell& At(int x, int y) const;
+    BoardSettings Settings() const { return settings_; }
+    Difficulty Level() const { return difficulty_; }
+    int Columns() const { return settings_.columns; }
+    int Rows() const { return settings_.rows; }
+    int MineCount() const { return settings_.mines; }
     Status State() const { return status_; }
-    int RemainingMines() const { return rules::mineCount - flags_; }
+    int RemainingMines() const { return settings_.mines - flags_; }
     int RevealedSafeCells() const { return revealedSafe_; }
     int ElapsedMilliseconds() const;
 
 private:
-    static bool InBounds(int x, int y);
+    bool InBounds(int x, int y) const;
     void PlaceMines(int firstX, int firstY);
     void RevealArea(int x, int y);
 
     std::mt19937 random_;
     Board board_{};
+    BoardSettings settings_ = difficulty::easy;
+    Difficulty difficulty_ = Difficulty::Easy;
     Status status_ = Status::Ready;
     bool placed_ = false;
     int flags_ = 0;

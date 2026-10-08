@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
@@ -7,6 +8,7 @@
 #include <string>
 
 #include "config/HighScores.h"
+#include "config/AppSettings.h"
 #include "games/breakout/BreakoutGame.h"
 #include "games/minesweeper/MinesweeperGame.h"
 #include "games/snake/SnakeGame.h"
@@ -262,16 +264,100 @@ void TestRecords(const std::filesystem::path& directory) {
     app::HighScores records;
     Require(app::LoadHighScores(records, path) && records.snake == 120 &&
             records.tetris == 456 && records.breakout == 0 &&
-            records.minesweeperBestMilliseconds == 0, "Old records remain compatible");
+            records.minesweeperEasyMilliseconds == 0, "Old records remain compatible");
     records.breakout = 300;
-    records.minesweeperBestMilliseconds = 12345;
+    records.minesweeperEasyMilliseconds = 12345;
     Require(app::SaveHighScores(records, path), "Records save succeeds");
     app::HighScores loaded;
     Require(app::LoadHighScores(loaded, path) && loaded.snake == 120 && loaded.tetris == 456 &&
-            loaded.breakout == 300 && loaded.minesweeperBestMilliseconds == 12345,
+            loaded.breakout == 300 && loaded.minesweeperEasyMilliseconds == 12345,
             "All four records persist without overwriting older scores");
-    loaded.minesweeperBestMilliseconds = -1;
+    loaded.minesweeperEasyMilliseconds = -1;
     Require(!app::SaveHighScores(loaded, path), "Negative record values are rejected");
+    std::filesystem::remove(path);
+}
+
+void TestSettings(const std::filesystem::path& directory) {
+    const auto path = directory / "settings-test.ini";
+    app::Settings settings;
+    settings.language = app::Language::English;
+    settings.musicVolume = 0.7f;
+    settings.musicPath = "C:/Music/星空.ogg";
+    Require(app::SaveSettings(settings, path), "Settings save succeeds");
+    app::Settings loaded;
+    Require(app::LoadSettings(loaded, path) && loaded.language == app::Language::English &&
+            loaded.musicPath == settings.musicPath && std::abs(loaded.musicVolume - 0.7f) < 0.001f,
+            "Selected music path and volume persist across restart");
+    std::filesystem::remove(path);
+}
+
+void TestMinesweeperDifficulties(const std::filesystem::path& directory) {
+    namespace mines = games::minesweeper;
+    const std::array<mines::BoardSettings, 5> boards{{
+        mines::difficulty::easy, mines::difficulty::normal, mines::difficulty::hard,
+        {5, 5, 16}, {40, 30, 1191}
+    }};
+    for (std::size_t index = 0; index < boards.size(); ++index) {
+        for (unsigned seed = 0; seed < 12; ++seed) {
+            mines::MinesweeperGame game(seed);
+            const auto level = index < 3 ? static_cast<mines::Difficulty>(index) : mines::Difficulty::Custom;
+            Require(game.Configure(level, boards[index]), "Difficulty configuration succeeds");
+            Require(game.Columns() == boards[index].columns && game.Rows() == boards[index].rows &&
+                    game.MineCount() == boards[index].mines, "Difficulty chooses the correct board");
+            game.Start();
+            const int firstX = seed % 2 ? 0 : game.Columns() / 2;
+            const int firstY = seed % 2 ? 0 : game.Rows() / 2;
+            game.Reveal(firstX, firstY);
+            Require(std::count_if(game.Cells().begin(), game.Cells().end(),
+                [](const mines::Cell& cell) { return cell.mine; }) == game.MineCount(),
+                "Every board has its exact requested mine count");
+            Require(game.At(firstX, firstY).adjacentMines == 0,
+                "Dense custom boards still preserve first reveal safety");
+            for (int y = 0; y < game.Rows(); ++y) {
+                for (int x = 0; x < game.Columns(); ++x) {
+                    if (!game.At(x, y).mine) game.Reveal(x, y);
+                }
+            }
+            Require(game.State() == mines::Status::Won &&
+                    game.RevealedSafeCells() == game.Columns() * game.Rows() - game.MineCount(),
+                    "Dynamic boards win after all safe cells are revealed");
+            game.Reset();
+            Require(game.Columns() == boards[index].columns && game.MineCount() == boards[index].mines &&
+                    game.State() == mines::Status::Ready, "Restart preserves selected difficulty");
+        }
+    }
+    mines::MinesweeperGame game(42);
+    Require(!game.Configure(mines::Difficulty::Custom, {4, 9, 10}) &&
+            !game.Configure(mines::Difficulty::Custom, {40, 31, 10}) &&
+            !game.Configure(mines::Difficulty::Custom, {5, 5, 17}) &&
+            !game.Configure(mines::Difficulty::Custom, {5, 5, 0}) && game.Columns() == 9,
+            "Invalid custom parameters are rejected without changing the game");
+    app::HighScores records;
+    Require(app::RecordMinesweeperWin(records, mines::Difficulty::Easy, 12000) &&
+            app::RecordMinesweeperWin(records, mines::Difficulty::Normal, 24000) &&
+            app::RecordMinesweeperWin(records, mines::Difficulty::Hard, 36000), "Three independent records update");
+    Require(!app::RecordMinesweeperWin(records, mines::Difficulty::Custom, 1) &&
+            !app::RecordMinesweeperWin(records, mines::Difficulty::Easy, 15000) &&
+            app::MinesweeperBest(records, mines::Difficulty::Custom) == 0, "Custom wins and slower wins are not recorded");
+    const auto path = directory / "difficulty-records.ini";
+    Require(app::SaveHighScores(records, path), "Difficulty records save");
+    app::HighScores loaded;
+    Require(app::LoadHighScores(loaded, path) && loaded.minesweeperEasyMilliseconds == 12000 &&
+            loaded.minesweeperNormalMilliseconds == 24000 && loaded.minesweeperHardMilliseconds == 36000,
+            "All difficulty records persist across reload");
+    {
+        std::ofstream legacy(path);
+        legacy << "snake=42\nminesweeper_best_ms=12345\n";
+    }
+    Require(app::LoadHighScores(loaded, path) && loaded.minesweeperEasyMilliseconds == 12345 &&
+            loaded.minesweeperNormalMilliseconds == 0 && loaded.minesweeperHardMilliseconds == 0 &&
+            loaded.snake == 42, "Legacy record migrates to Easy without touching other records");
+    {
+        std::ofstream mixed(path);
+        mixed << "minesweeper_easy_ms=20000\nminesweeper_best_ms=12345\n";
+    }
+    Require(app::LoadHighScores(loaded, path) && loaded.minesweeperEasyMilliseconds == 20000,
+            "Explicit difficulty record overrides legacy data regardless of key order");
     std::filesystem::remove(path);
 }
 
@@ -296,6 +382,8 @@ int main(int argc, char** argv) {
         TestPaddleCollisions();
         TestBreakout();
         TestRecords(directory);
+        TestSettings(directory);
+        TestMinesweeperDifficulties(directory);
         TestExistingGames();
         std::cout << "Game rules and record persistence tests passed\n";
     } catch (const std::exception& error) {

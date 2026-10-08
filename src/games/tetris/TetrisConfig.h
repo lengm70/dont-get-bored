@@ -33,9 +33,9 @@ inline constexpr int overlayHintY = 329;
 inline constexpr int overlayHintSize = 17;
 inline constexpr float cellInset = 1.0f;
 
-inline constexpr Color boardColor = ui::palette::board;
-inline constexpr Color gridColor = ui::palette::grid;
-inline constexpr Color overlayColor = ui::palette::overlay;
+inline const Color& boardColor = ui::palette::board;
+inline const Color& gridColor = ui::palette::grid;
+inline const Color& overlayColor = ui::palette::overlay;
 inline constexpr std::array<Color, 7> pieceColors{{
     {88, 214, 231, 255},   // I
     {244, 205, 88, 255},   // O

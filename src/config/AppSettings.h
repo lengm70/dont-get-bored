@@ -1,6 +1,7 @@
 #pragma once
 
 #include <filesystem>
+#include <string>
 
 namespace app {
 
@@ -12,6 +13,10 @@ struct Settings {
     Resolution resolution = Resolution::P1080;
     int fpsLimit = 60;
     bool showFps = false;
+    float musicVolume = 0.5f;
+    std::string musicPath;
+    std::string backgroundPath;
+    std::string playerBackgroundPath;
 };
 
 struct WindowSize {

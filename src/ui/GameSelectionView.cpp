@@ -89,7 +89,9 @@ MenuResult DrawGameSelection(Font font, app::Language language, const UiLayout& 
         {text::BreakoutForLanguage(language).name, labels.breakoutHint,
          GameIllustration::Breakout, MenuAction::StartBreakout, config::accentColor},
         {text::MinesweeperForLanguage(language).name, labels.minesweeperHint,
-         GameIllustration::Minesweeper, MenuAction::StartMinesweeper, config::accentColor}
+         GameIllustration::Minesweeper, MenuAction::StartMinesweeper, config::accentColor},
+        {text::GomokuForLanguage(language).name, labels.gomokuHint,
+         GameIllustration::Gomoku, MenuAction::StartGomoku, config::accentColor}
     }};
     constexpr float gridWidth = selection::cardCount * selection::cardWidth +
                                (selection::cardCount - 1) * selection::cardGap;
