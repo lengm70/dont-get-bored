@@ -1,4 +1,5 @@
 #include "ui/GameIllustration.h"
+#include "games/fruit/FruitVisual.h"
 
 #include <array>
 
@@ -155,6 +156,13 @@ void DrawGameIllustration(GameIllustration game, Rectangle bounds, Font font) {
         case GameIllustration::Breakout: DrawBreakout(canvas); break;
         case GameIllustration::Minesweeper: DrawMinesweeper(canvas, font); break;
         case GameIllustration::Gomoku: DrawGomoku(canvas); break;
+        case GameIllustration::Fruit:
+            games::fruit::DrawFusionOrb(canvas.Point(80, 105), 42 * canvas.scale, 10, 0.35f, 0, canvas.scale);
+            games::fruit::DrawFusionOrb(canvas.Point(30, 132), 18 * canvas.scale, 3, 0.6f, 0, canvas.scale);
+            games::fruit::DrawFusionOrb(canvas.Point(129, 132), 16 * canvas.scale, 5, -0.3f, 0, canvas.scale);
+            games::fruit::DrawFusionOrb(canvas.Point(80, 27), 12 * canvas.scale, 1, 0.25f, 0, canvas.scale);
+            canvas.Line({80, 47}, {80, 58}, 2, selection::yellow);
+            break;
     }
 }
 

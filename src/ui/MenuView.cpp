@@ -149,6 +149,7 @@ MenuResult DrawMenu(app::Screen screen, Font font, app::Settings& settings) {
         case app::Screen::Settings: return DrawSettings(font, settings, labels, layout);
         case app::Screen::MediaLibrary: break;
         case app::Screen::MusicSettings: return DrawMusicSettings(font, settings, labels, layout);
+        case app::Screen::Fruit: break;
         case app::Screen::Snake: break;
         case app::Screen::Tetris: break;
         case app::Screen::Breakout: break;
@@ -169,6 +170,22 @@ bool UpdateMusicPlayerInput() {
 MenuResult DrawMusicPlayer(Font font, app::Settings& settings) {
     const UiLayout layout = CurrentLayout();
     const auto& labels = text::ForLanguage(settings.language);
+    if (musicPlayerInput.Collapsed()) {
+        const Rectangle tab = layout.Rect(musicPlayerInput.VisibleBounds());
+        DrawRectangleRounded(tab, playerConfig::cornerRoundness, playerConfig::cornerSegments, config::baseNormal);
+        DrawRectangleRoundedLinesEx(tab, playerConfig::cornerRoundness, playerConfig::cornerSegments, layout.scale, config::accentColor);
+        const Vector2 center{tab.x + tab.width / 2, tab.y + tab.height / 2};
+        Vector2 direction{0, -1};
+        if (musicPlayerInput.Dock() == PlayerDock::Top) direction = {0, 1};
+        else if (musicPlayerInput.Dock() == PlayerDock::Left) direction = {1, 0};
+        else if (musicPlayerInput.Dock() == PlayerDock::Right) direction = {-1, 0};
+        const Vector2 tangent{-direction.y, direction.x};
+        const float size = playerConfig::arrowSize * layout.scale;
+        const Vector2 tip{center.x + direction.x * size, center.y + direction.y * size};
+        DrawLineEx({center.x - direction.x * size + tangent.x * size, center.y - direction.y * size + tangent.y * size}, tip, 2 * layout.scale, config::textColor);
+        DrawLineEx(tip, {center.x - direction.x * size - tangent.x * size, center.y - direction.y * size - tangent.y * size}, 2 * layout.scale, config::textColor);
+        return {};
+    }
     const Rectangle design = musicPlayerInput.DesignBounds();
     const Rectangle panel = layout.Rect(design);
     DrawPlayerBackground(panel);
@@ -176,6 +193,8 @@ MenuResult DrawMusicPlayer(Font font, app::Settings& settings) {
     DrawRectangleRoundedLinesEx(panel, 0.08f, 8, 1.0f * layout.scale, config::borderNormal);
     DrawScaledText(font, labels.music, design.x + 12, design.y + 8,
                    15, config::textColor, layout);
+    const bool playerWasLocked = GuiIsLocked();
+    if (musicPlayerInput.SuppressControls()) GuiLock();
     const float x = design.x + 8;
     const float width = (design.width - 32) / 3.0f;
     MenuAction action = MenuAction::None;
@@ -196,6 +215,7 @@ MenuResult DrawMusicPlayer(Font font, app::Settings& settings) {
               &settings.musicVolume, 0.0f, 1.0f);
     DrawScaledText(font, volumeText, design.x + design.width / 2 - 14, design.y + 90,
                    15, config::textColor, layout);
+    if (!playerWasLocked) GuiUnlock();
     return {action, settings.musicVolume != previousVolume};
 }
 

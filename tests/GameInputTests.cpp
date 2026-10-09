@@ -3,6 +3,7 @@
 #include <stdexcept>
 
 #include "raylib.h"
+#include "games/fruit/FruitScreen.h"
 #include "games/breakout/BreakoutScreen.h"
 #include "games/minesweeper/MinesweeperConfig.h"
 #include "games/minesweeper/MinesweeperLayout.h"
@@ -32,6 +33,7 @@ bool IsKeyPressed(int key) { return keys.at(key); }
 bool IsKeyDown(int key) { return keys.at(key); }
 bool IsKeyPressedRepeat(int) { return false; }
 bool IsMouseButtonPressed(int button) { return buttons.at(button); }
+Vector2 GetMouseDelta() { return {}; }
 Vector2 GetMousePosition() { return mouse; }
 int GetScreenWidth() { return width; }
 int GetScreenHeight() { return height; }
@@ -39,6 +41,26 @@ int GetScreenHeight() { return height; }
 
 int main() {
     try {
+        games::fruit::FruitGame fruitGame(42);
+        Clear(); keys[KEY_SPACE] = true;
+        games::fruit::UpdateFromInput(fruitGame, seconds);
+        Require(fruitGame.State() == games::fruit::Status::Playing && fruitGame.Fruits().empty(), "Fruit Space starts without dropping");
+        Clear(); buttons[MOUSE_BUTTON_LEFT] = true; mouse = {480, 300};
+        games::fruit::UpdateFromInput(fruitGame, seconds, true);
+        Require(fruitGame.Fruits().empty(), "Player-captured click cannot drop fruit");
+        Clear(); keys[KEY_RIGHT] = true;
+        const float previousAim = fruitGame.Aim();
+        games::fruit::UpdateFromInput(fruitGame, seconds);
+        Require(fruitGame.Aim() > previousAim, "Fruit keyboard aiming works with stationary cursor");
+        Clear(); keys[KEY_SPACE] = true;
+        games::fruit::UpdateFromInput(fruitGame, seconds);
+        Require(fruitGame.Fruits().size() == 1, "Fruit Space drops after starting");
+        Clear(); keys[KEY_P] = true;
+        games::fruit::UpdateFromInput(fruitGame, seconds);
+        Require(fruitGame.State() == games::fruit::Status::Paused, "Fruit pause input");
+        Clear(); keys[KEY_R] = true;
+        games::fruit::UpdateFromInput(fruitGame, seconds);
+        Require(fruitGame.State() == games::fruit::Status::Ready && fruitGame.Fruits().empty(), "Fruit restart returns Ready");
         namespace gomoku = games::gomoku;
         gomoku::GomokuGame gomokuGame;
         gomoku::GomokuAiTurn ai;
@@ -112,6 +134,30 @@ int main() {
             Clear(); width = size[0]; height = size[1];
             ui::MusicPlayerInput player;
             const auto layout = ui::CurrentLayout();
+            for (const auto edge : {ui::PlayerDock::Left, ui::PlayerDock::Right, ui::PlayerDock::Top, ui::PlayerDock::Bottom}) {
+                ui::MusicPlayerInput docked;
+                const Vector2 center = layout.Point(730, 454);
+                docked.Update(layout, center, true, true);
+                Vector2 destination{width / 2.0f, height / 2.0f};
+                if (edge == ui::PlayerDock::Left) destination.x = 0;
+                if (edge == ui::PlayerDock::Right) destination.x = static_cast<float>(width);
+                if (edge == ui::PlayerDock::Top) destination.y = 0;
+                if (edge == ui::PlayerDock::Bottom) destination.y = static_cast<float>(height);
+                docked.Update(layout, destination, false, true);
+                Require(docked.Update(layout, destination, false, false), "Dock release captures underlying input");
+                Require(docked.Collapsed() && docked.Dock() == edge, "Player docks to nearest edge");
+                const Rectangle tab = layout.Rect(docked.VisibleBounds());
+                Require(tab.x >= -0.1f && tab.y >= -0.1f && tab.x + tab.width <= width + 0.1f && tab.y + tab.height <= height + 0.1f, "Collapsed tab stays in actual window bounds");
+                const auto full = layout.Rect(docked.DesignBounds());
+                Require(!docked.Update(layout, {full.x + full.width / 2, full.y + full.height / 2}, false, false), "Hidden player area does not capture game input");
+                const Vector2 arrow{tab.x + tab.width / 2, tab.y + tab.height / 2};
+                Require(docked.Update(layout, arrow, true, true) && !docked.Collapsed(), "Arrow click expands player without passing through");
+                Require(docked.SuppressControls(), "Expansion press cannot activate player buttons");
+                Require(docked.Update(layout, arrow, false, false), "Expansion release captured");
+                Require(docked.SuppressControls(), "Expansion release cannot activate player buttons");
+                docked.Update(layout, layout.Point(300, 250), false, false);
+                Require(!docked.Collapsed(), "Expanded player does not immediately collapse again");
+            }
             mines::MinesweeperGame game(42);
             game.Configure(mines::Difficulty::Hard);
             game.Start();

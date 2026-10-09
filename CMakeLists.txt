@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(dont_get_bored VERSION 0.2.2 LANGUAGES CXX)
+project(dont_get_bored VERSION 0.2.4 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(DONT_GET_BORED_RELEASE_VERSION "0.2.2")
+set(DONT_GET_BORED_RELEASE_VERSION "0.2.4")
 
 find_package(raylib CONFIG REQUIRED)
 find_package(Threads REQUIRED)
@@ -18,7 +18,11 @@ add_executable(dont_get_bored
     src/audio/BackgroundMusic.cpp
     src/config/AppSettings.cpp
     src/config/HighScores.cpp
+    src/games/fruit/FruitGame.cpp
+    src/games/fruit/FruitPhysics.cpp
     src/games/snake/SnakeGame.cpp
+    src/games/fruit/FruitVisual.cpp
+    src/games/fruit/FruitScreen.cpp
     src/games/snake/SnakeScreen.cpp
     src/games/tetris/TetrisGame.cpp
     src/games/tetris/TetrisScreen.cpp
@@ -64,6 +68,9 @@ endif()
 option(BUILD_TESTING "Build game logic tests" OFF)
 include(CTest)
 if(BUILD_TESTING)
+    add_executable(fruit_tests tests/FruitTests.cpp src/games/fruit/FruitPhysics.cpp src/games/fruit/FruitGame.cpp src/config/HighScores.cpp)
+    target_include_directories(fruit_tests PRIVATE src)
+    add_test(NAME fruit_tests COMMAND fruit_tests "${CMAKE_CURRENT_BINARY_DIR}/fruit-test-data")
     add_executable(adaptive_theme_tests tests/AdaptiveThemeTests.cpp src/ui/AdaptiveTheme.cpp)
     target_include_directories(adaptive_theme_tests PRIVATE src)
     target_link_libraries(adaptive_theme_tests PRIVATE raylib)
@@ -94,6 +101,10 @@ if(BUILD_TESTING)
     add_test(NAME game_logic_tests COMMAND game_logic_tests "${CMAKE_CURRENT_BINARY_DIR}/test-data")
     add_executable(game_input_tests
         tests/GameInputTests.cpp
+        src/games/fruit/FruitPhysics.cpp
+        src/games/fruit/FruitGame.cpp
+        src/games/fruit/FruitVisual.cpp
+        src/games/fruit/FruitScreen.cpp
         src/games/gomoku/GomokuGame.cpp
         src/games/gomoku/GomokuAI.cpp
         src/games/gomoku/GomokuAiTurn.cpp
@@ -120,7 +131,7 @@ if(BUILD_TESTING)
     target_compile_definitions(game_input_tests PRIVATE
         IsKeyPressed=TestIsKeyPressed IsKeyDown=TestIsKeyDown
         IsKeyPressedRepeat=TestIsKeyPressedRepeat IsMouseButtonPressed=TestIsMouseButtonPressed
-        GetMousePosition=TestGetMousePosition GetScreenWidth=TestGetScreenWidth
+        GetMouseDelta=TestGetMouseDelta GetMousePosition=TestGetMousePosition GetScreenWidth=TestGetScreenWidth
         GetScreenHeight=TestGetScreenHeight)
     if(WIN32)
         target_link_libraries(game_input_tests PRIVATE comdlg32)

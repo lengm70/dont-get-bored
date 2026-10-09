@@ -1,6 +1,6 @@
 # don't get bored
 
-A C++17 GUI collection with Snake, Tetris, Breakout, Minesweeper, and Gomoku, with Chinese and English menus. Every game starts with **Space** from its ready screen.
+A C++17 GUI collection with Snake, Tetris, Breakout, Minesweeper, Gomoku, and Fruit Merge, with Chinese and English menus. Every game starts with **Space** from its ready screen.
 
 ## Gomoku
 
@@ -10,16 +10,14 @@ In computer mode you play Black. Easy, Normal and Hard use pattern evaluation an
 
 The Gomoku module separates rules/state (`GomokuGame`), search (`GomokuAI`), worker lifetime (`GomokuAiTurn`), presentation constants (`GomokuConfig`) and input/rendering (`GomokuScreen`). Tests cover win directions, overlines, draws, tactical replies, cancellation and mouse mapping.
 
-## Public release: v0.2.2
+## Public release: v0.2.4
 
-- Five games, including two-player and computer Gomoku with three AI levels.
-- Minesweeper preset/custom difficulties and separate persistent preset records.
-- Draggable music player and persistent libraries for main backgrounds, player backdrops and music.
-- Automatic UI colors derived from the selected main background.
-- Windows application/taskbar icon and improved input, background import and Breakout drawing.
-- Six CTest targets covering rules, input, AI, media persistence, image replacement and theme contrast.
+- Six games, including Fruit Merge with eleven levels and persistent best score.
+- Rotating geometric energy orbs, mass-dependent collisions, elastic rebounds and contact friction.
+- Music player snaps to all four window edges after dragging; click the arrow tab to expand.
+- Two-row game selection, bilingual labels and seven passing CTest targets.
 
-Download the full Windows x64 ZIP from [GitHub Releases](https://github.com/lengm70/dont-get-bored/releases/tag/v0.2.2), extract it and run `dont_get_bored.exe`. Keep the DLLs and assets beside the EXE.
+Download the full Windows x64 ZIP from [GitHub Releases](https://github.com/lengm70/dont-get-bored/releases/tag/v0.2.4), extract it and run `dont_get_bored.exe`. Keep the DLLs and assets beside the EXE.
 
 ## Development history: v0.3.0-beta.3
 
@@ -53,6 +51,14 @@ Download the full Windows x64 ZIP from [GitHub Releases](https://github.com/leng
 - Illustrated game selection cards with hover feedback and localized descriptions.
 - Snake head eyes follow its direction; body colors fade clearly from head to tail.
 - Background artwork loads once and preserves its aspect ratio at different window sizes.
+
+## Fruit Merge
+
+Choose **Fruit Merge / 合成大西瓜**, then press Space to start. Move the mouse inside the jar or use Left/Right (A/D) to aim; click inside the jar or press Space to drop. Identical touching fruits merge into the next of eleven levels and award points. Creating the final watermelon wins. If an older fruit remains above the dashed danger line for 1.5 seconds, the game ends; new drops have a 1.2-second grace period. P pauses/resumes, R resets to Ready, and Esc returns to selection. Best score persists in `config/highscores.ini`.
+
+Objects use rotating neon polygon shells and glowing energy cores inside circular collision envelopes, matching the cosmic UI. Impact pulses show collisions and merges. Each level doubles mass; friction transfers motion into spin, and restitution produces visible rebounds. Merges carry linear and angular momentum (spin has a safety cap).
+
+Rules and circle physics are independent of raylib. Physics uses a 120 Hz step, mass-weighted circle separation/impulses, side/floor constraints and repeated contact solving. Drop cooldown and blocked-spawn checks prevent overlapping rapid drops. Rendering and input adapters are separate from rules and presentation constants.
 
 ## Snake
 
@@ -88,7 +94,7 @@ The Media Library provides separate histories for the main background, player ba
 
 New imports are copied into `config/media/` under content-based filenames, so deleting the original source does not lose them. The catalog in `config/media/library.txt` and the current selections in `config/settings.ini` survive restarting. The entire personal media folder is ignored by Git. Existing custom paths are remembered when first upgrading; those legacy files must remain available until re-imported. Failed imports keep the current selection and never replace older history entries.
 
-The floating player supports pause/resume and dragging its header. Player mouse input is captured before menus and mouse-controlled games, including Minesweeper and Gomoku.
+The floating player supports pause/resume and dragging its header. Releasing a drag within 28 design units of the nearest window edge docks and collapses it into a small arrow tab. Click the inward-facing arrow to expand; drag it away to move freely. Hidden controls do not capture game input, and docking follows actual window edges across resolutions. Player mouse input is captured before menus and mouse-controlled games, including Minesweeper and Gomoku.
 
 Music volume and all three current media selections are saved in the local settings file. Missing legacy files fall back to defaults on startup and remain listed so they can be identified and re-imported.
 

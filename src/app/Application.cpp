@@ -14,6 +14,7 @@
 #include "config/AppSettings.h"
 #include "config/HighScores.h"
 #include "config/UiConfig.h"
+#include "games/fruit/FruitScreen.h"
 #include "games/snake/SnakeGame.h"
 #include "games/snake/SnakeScreen.h"
 #include "games/tetris/TetrisGame.h"
@@ -67,6 +68,7 @@ int Run() {
 
     unsigned themeRevision = ui::palette::revision;
     Screen screen = Screen::MainMenu;
+    games::fruit::FruitGame fruit;
     games::snake::SnakeGame snake;
     games::tetris::TetrisGame tetris;
     games::breakout::BreakoutGame breakout;
@@ -88,7 +90,7 @@ int Run() {
         if (IsKeyPressed(KEY_ESCAPE)) {
             gomokuAi.Cancel();
             if (screen == Screen::MainMenu) running = false;
-            else if (screen == Screen::Snake || screen == Screen::Tetris ||
+            else if (screen == Screen::Fruit || screen == Screen::Snake || screen == Screen::Tetris ||
                      screen == Screen::Breakout || screen == Screen::Minesweeper ||
                      screen == Screen::MinesweeperSetup || screen == Screen::Gomoku ||
                      screen == Screen::GomokuSetup) {
@@ -99,7 +101,10 @@ int Run() {
 
         const HighScores previousScores = highScores;
         const bool mouseCaptured = ui::UpdateMusicPlayerInput();
-        if (screen == Screen::Snake) {
+        if (screen == Screen::Fruit) {
+            games::fruit::UpdateFromInput(fruit, GetFrameTime(), mouseCaptured);
+            highScores.fruit = std::max(highScores.fruit, fruit.Score());
+        } else if (screen == Screen::Snake) {
             games::snake::UpdateFromInput(snake, GetFrameTime());
             highScores.snake = std::max(highScores.snake, snake.Score());
         } else if (screen == Screen::Tetris) {
@@ -119,7 +124,7 @@ int Run() {
             games::gomoku::UpdateFromInput(gomoku, gomokuAi,
                 static_cast<games::gomoku::Strength>(gomokuOptions.strength), mouseCaptured);
         }
-        const bool recordsChanged = highScores.snake != previousScores.snake ||
+        const bool recordsChanged = highScores.fruit != previousScores.fruit || highScores.snake != previousScores.snake ||
             highScores.tetris != previousScores.tetris ||
             highScores.breakout != previousScores.breakout ||
             highScores.minesweeperEasyMilliseconds != previousScores.minesweeperEasyMilliseconds ||
@@ -133,7 +138,9 @@ int Run() {
         ui::MenuResult result;
         const bool guiWasLocked = GuiIsLocked();
         if (mouseCaptured) GuiLock();
-        if (screen == Screen::Snake) {
+        if (screen == Screen::Fruit) {
+            games::fruit::DrawScreen(fruit, font, settings.language, highScores.fruit);
+        } else if (screen == Screen::Snake) {
             games::snake::DrawScreen(snake, font, settings.language, highScores.snake);
         } else if (screen == Screen::Tetris) {
             games::tetris::DrawScreen(tetris, font, settings.language,
@@ -225,6 +232,8 @@ int Run() {
             case ui::MenuAction::UseMedia:
                 mediaView.failed = !mediaController.Select(static_cast<media::Kind>(mediaView.category), mediaView.selected);
                 break;
+            case ui::MenuAction::StartFruit:
+                fruit.Reset(); screen = Screen::Fruit; break;
             case ui::MenuAction::StartSnake:
                 snake.Reset();
                 screen = Screen::Snake;

@@ -23,6 +23,9 @@ Font LoadMenuFont(const std::vector<std::string>& additionalText) {
             UnloadCodepoints(loaded);
         }
     };
+    for (const auto* labels : {&text::fruitChinese, &text::fruitEnglish}) {
+        for (const char* label : text::AllLabels(*labels)) collect(label);
+    }
     collect(text::title);
     collect(text::resolutionChoices);
     collect(text::fpsChoices);

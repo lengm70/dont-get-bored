@@ -42,6 +42,7 @@ bool LoadHighScores(HighScores& scores, const std::filesystem::path& path) {
         const std::string value = Trim(line.substr(separator + 1));
         if (key == "snake") ParseScore(value, loaded.snake);
         else if (key == "tetris") ParseScore(value, loaded.tetris);
+        else if (key == "fruit") ParseScore(value, loaded.fruit);
         else if (key == "breakout") ParseScore(value, loaded.breakout);
         else if (key == "minesweeper_best_ms") ParseScore(value, legacyMinesweeper);
         else if (key == "minesweeper_easy_ms") {
@@ -57,7 +58,7 @@ bool LoadHighScores(HighScores& scores, const std::filesystem::path& path) {
 }
 
 bool SaveHighScores(const HighScores& scores, const std::filesystem::path& path) {
-    if (scores.snake < 0 || scores.tetris < 0 || scores.breakout < 0 ||
+    if (scores.snake < 0 || scores.tetris < 0 || scores.breakout < 0 || scores.fruit < 0 ||
         scores.minesweeperEasyMilliseconds < 0 || scores.minesweeperNormalMilliseconds < 0 ||
         scores.minesweeperHardMilliseconds < 0) return false;
     std::error_code error;
@@ -70,6 +71,7 @@ bool SaveHighScores(const HighScores& scores, const std::filesystem::path& path)
     output << "# don't get bored high scores\n"
            << "snake=" << scores.snake << '\n'
            << "tetris=" << scores.tetris << '\n'
+           << "fruit=" << scores.fruit << '\n'
            << "breakout=" << scores.breakout << '\n'
            << "minesweeper_easy_ms=" << scores.minesweeperEasyMilliseconds << '\n'
            << "minesweeper_normal_ms=" << scores.minesweeperNormalMilliseconds << '\n'

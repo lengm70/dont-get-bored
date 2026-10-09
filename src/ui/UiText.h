@@ -60,23 +60,45 @@ struct SelectionLabels {
     const char* breakoutHint;
     const char* minesweeperHint;
     const char* gomokuHint;
+    const char* fruitHint;
     const char* play;
 };
 
 inline constexpr SelectionLabels selectionChinese{
-    "五款小游戏，随时开局", "吃食物，让小蛇长大", "旋转方块，消除整行",
-    "接住小球，击碎砖块", "插旗排雷，寻找安全格", "双人对弈，挑战电脑", "进入游戏"};
+    "六款小游戏，随时开局", "吃食物，让小蛇长大", "旋转方块，消除整行",
+    "接住小球，击碎砖块", "插旗排雷，寻找安全格", "双人对弈，挑战电脑", "碰撞合成，目标西瓜", "进入游戏"};
 inline constexpr SelectionLabels selectionEnglish{
-    "Five games. Pick your next break.", "Grow your snake", "Stack & clear",
-    "Keep bouncing", "Find safe tiles", "Connect five", "Play"};
+    "Six games. Pick your next break.", "Grow & eat", "Stack & clear",
+    "Break bricks", "Find safe tiles", "Connect five", "Drop & merge", "Play"};
 
 inline const SelectionLabels& SelectionForLanguage(app::Language language) {
     return language == app::Language::English ? selectionEnglish : selectionChinese;
 }
 
-inline constexpr std::array<const char*, 7> AllLabels(const SelectionLabels& labels) {
+inline constexpr std::array<const char*, 8> AllLabels(const SelectionLabels& labels) {
     return {labels.subtitle, labels.snakeHint, labels.tetrisHint,
-            labels.breakoutHint, labels.minesweeperHint, labels.gomokuHint, labels.play};
+            labels.breakoutHint, labels.minesweeperHint, labels.gomokuHint, labels.fruitHint, labels.play};
+}
+
+struct FruitLabels {
+    const char* name; const char* score; const char* best; const char* next;
+    const char* ready; const char* paused; const char* gameOver; const char* won;
+    const char* start; const char* resume; const char* restart; const char* controls; const char* danger;
+};
+inline constexpr FruitLabels fruitChinese{
+    "合成大西瓜", "分数", "最高分", "下一个", "准备开始", "已暂停", "游戏结束", "合成西瓜！",
+    "按空格开始", "按 P 继续", "按 R 重开",
+    "鼠标或左右键移动  点击或空格投放  P 暂停  R 重开  Esc 返回", "注意高度！"};
+inline constexpr FruitLabels fruitEnglish{
+    "Fruit Merge", "Score", "Best", "Next", "Ready", "Paused", "Game Over", "Watermelon!",
+    "Press Space to start", "P to resume", "R to restart",
+    "Mouse / arrows aim | Click / Space drop | P pause | R reset | Esc back", "Too high!"};
+inline const FruitLabels& FruitForLanguage(app::Language language) {
+    return language == app::Language::English ? fruitEnglish : fruitChinese;
+}
+inline constexpr std::array<const char*, 13> AllLabels(const FruitLabels& labels) {
+    return {labels.name, labels.score, labels.best, labels.next, labels.ready, labels.paused,
+        labels.gameOver, labels.won, labels.start, labels.resume, labels.restart, labels.controls, labels.danger};
 }
 
 struct SnakeLabels {

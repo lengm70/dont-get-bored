@@ -9,6 +9,7 @@ struct HighScores {
     int snake = 0;
     int tetris = 0;
     int breakout = 0;
+    int fruit = 0;
     int minesweeperEasyMilliseconds = 0;  // Zero means no completed game yet.
     int minesweeperNormalMilliseconds = 0;
     int minesweeperHardMilliseconds = 0;

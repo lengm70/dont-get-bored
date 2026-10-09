@@ -55,10 +55,10 @@ bool DrawCard(const Entry& entry, Rectangle design, Font font, const char* play,
         (hovered ? selection::focusBorderWidth : selection::borderWidth) * layout.scale,
         hovered ? entry.accent : selection::borderColor);
     const Rectangle artwork = layout.Rect({design.x + selection::contentPadding,
-        design.y + selection::contentPadding, design.width - 2 * selection::contentPadding,
+        design.y + selection::illustrationOffsetY, selection::illustrationHeight,
         selection::illustrationHeight});
     DrawGameIllustration(entry.illustration, artwork, font);
-    const float textX = design.x + selection::contentPadding;
+    const float textX = design.x + 2 * selection::contentPadding + selection::illustrationHeight;
     DrawScaledText(font, entry.name, textX, design.y + selection::titleOffsetY,
                    selection::nameSize, config::textColor, layout);
     DrawScaledText(font, entry.description, textX, design.y + selection::descriptionOffsetY,
@@ -91,13 +91,16 @@ MenuResult DrawGameSelection(Font font, app::Language language, const UiLayout& 
         {text::MinesweeperForLanguage(language).name, labels.minesweeperHint,
          GameIllustration::Minesweeper, MenuAction::StartMinesweeper, config::accentColor},
         {text::GomokuForLanguage(language).name, labels.gomokuHint,
-         GameIllustration::Gomoku, MenuAction::StartGomoku, config::accentColor}
+         GameIllustration::Gomoku, MenuAction::StartGomoku, config::accentColor},
+        {text::FruitForLanguage(language).name, labels.fruitHint,
+         GameIllustration::Fruit, MenuAction::StartFruit, config::accentColor}
     }};
-    constexpr float gridWidth = selection::cardCount * selection::cardWidth +
-                               (selection::cardCount - 1) * selection::cardGap;
+    constexpr float gridWidth = selection::columns * selection::cardWidth +
+                               (selection::columns - 1) * selection::cardGap;
     for (int index = 0; index < selection::cardCount; ++index) {
         const Rectangle card{(config::designWidth - gridWidth) / 2 +
-            index * (selection::cardWidth + selection::cardGap), selection::cardsY,
+            (index % selection::columns) * (selection::cardWidth + selection::cardGap),
+            selection::cardsY + (index / selection::columns) * (selection::cardHeight + selection::rowGap),
             selection::cardWidth, selection::cardHeight};
         if (DrawCard(entries[index], card, font, labels.play, layout)) return {entries[index].action};
     }
