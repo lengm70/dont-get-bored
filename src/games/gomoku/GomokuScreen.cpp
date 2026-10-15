@@ -1,3 +1,4 @@
+#include "ui/AnimatedControls.h"
 #include "games/gomoku/GomokuScreen.h"
 #include <cmath>
 #include "raygui.h"
@@ -45,16 +46,16 @@ ui::MenuResult DrawSetup(Font font, app::Language language, SetupOptions& option
     ui::DrawBackground(layout);
     ui::DrawCenteredText(font, labels.name, config::titleY, config::titleSize, ui::palette::text, layout);
     ui::DrawScaledText(font, labels.mode, config::setupLabelX, config::modeY, config::statusSize, ui::palette::text, layout);
-    GuiComboBox(layout.Rect({config::setupControlX, config::modeY, config::setupControlWidth, config::controlHeight}), labels.modes, &options.mode);
+    ui::AnimatedComboBox(layout.Rect({config::setupControlX, config::modeY, config::setupControlWidth, config::controlHeight}), labels.modes, &options.mode);
     if (options.mode == static_cast<int>(Mode::Computer)) {
         ui::DrawScaledText(font, labels.difficulty, config::setupLabelX, config::strengthY, config::statusSize, ui::palette::text, layout);
-        GuiComboBox(layout.Rect({config::setupControlX, config::strengthY, config::setupControlWidth, config::controlHeight}), labels.difficulties, &options.strength);
+        ui::AnimatedComboBox(layout.Rect({config::setupControlX, config::strengthY, config::setupControlWidth, config::controlHeight}), labels.difficulties, &options.strength);
     }
     ui::DrawCenteredText(font, options.mode == 1 ? labels.humanBlack : labels.twoPlayers,
                          config::setupHintY, config::hintSize, ui::palette::muted, layout);
     ui::DrawCenteredText(font, labels.rules, config::rulesHintY, config::hintSize, ui::palette::muted, layout);
-    if (GuiButton(layout.Rect(config::startButton), labels.start) || IsKeyPressed(KEY_SPACE)) return {ui::MenuAction::LaunchGomoku};
-    if (GuiButton(layout.Rect(config::backButton), ui::text::ForLanguage(language).back)) return {ui::MenuAction::Back};
+    if (ui::AnimatedButton(layout.Rect(config::startButton), labels.start) || IsKeyPressed(KEY_SPACE)) return {ui::MenuAction::LaunchGomoku};
+    if (ui::AnimatedButton(layout.Rect(config::backButton), ui::text::ForLanguage(language).back)) return {ui::MenuAction::Back};
     return {};
 }
 

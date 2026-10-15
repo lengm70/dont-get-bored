@@ -1,145 +1,123 @@
 #include "games/breakout/BreakoutGame.h"
-
 #include <algorithm>
 #include <cmath>
-
 namespace games::breakout {
-
 BreakoutGame::BreakoutGame() { Reset(); }
-
-void BreakoutGame::Reset() {
-    bricks_.fill(true);
-    score_ = 0;
+void BreakoutGame::Reset(int level) {
+    level_ = std::clamp(level, 0, rules::levelCount - 1);
+    score_ = combo_ = maxCombo_ = destroyed_ = impactSerial_ = 0;
     lives_ = rules::initialLives;
-    paddleX_ = (rules::boardWidth - rules::paddleWidth) / 2.0f;
+    mouseTarget_.reset();
+    LoadLevel();
+}
+void BreakoutGame::LoadLevel() {
+    bricks_ = MakeLevel(level_);
+    for (int i = 0; i < rules::brickCount; ++i) alive_[i] = bricks_[i].Alive();
+    levelStartScore_ = score_;
+    levelMaxCombo_ = completionBonus_ = combo_ = 0;
+    seconds_ = 0;
+    impacts_.clear();
+    paddleX_ = (rules::boardWidth - rules::paddleWidth) / 2;
     PrepareServe();
 }
-
 void BreakoutGame::PrepareServe() {
     status_ = Status::Ready;
-    ball_ = {paddleX_ + rules::paddleWidth / 2.0f,
-             rules::paddleY - rules::ballRadius - rules::separation};
-    velocity_ = {rules::ballSpeed * rules::serveHorizontalRatio,
-                -rules::ballSpeed * std::sqrt(1.0f - rules::serveHorizontalRatio *
-                                             rules::serveHorizontalRatio)};
+    powers_ = {};
+    drops_.clear();
+    paddleVelocity_ = 0;
+    paddleX_ = std::clamp(paddleX_, 0.0f, rules::boardWidth - rules::paddleWidth);
+    const float speed = rules::ballSpeed + level_ * rules::levelSpeedIncrease;
+    BallState ball;
+    ball.position = {paddleX_ + rules::paddleWidth / 2, rules::paddleY - rules::ballRadius - rules::separation};
+    ball.velocity = {speed * rules::serveHorizontalRatio, -speed * std::sqrt(1 - rules::serveHorizontalRatio * rules::serveHorizontalRatio)};
+    ball.trail.fill(ball.position);
+    balls_.assign(1, ball);
+    lastBall_ = ball.position;
 }
-
-void BreakoutGame::DeflectFromPaddle() {
-    // A small random turn prevents the ball from repeating the same paddle path.
-    randomState_ = randomState_ * 1664525u + 1013904223u;
-    const float unit = static_cast<float>(randomState_ >> 8) / 16777216.0f;
-    const float magnitude = rules::paddleDeflectionMin + unit *
-        (rules::paddleDeflectionMax - rules::paddleDeflectionMin);
-    const float angle = (randomState_ & 1u) == 0 ? magnitude : -magnitude;
-    const float cosine = std::cos(angle);
-    const float sine = std::sin(angle);
-    velocity_ = {velocity_.x * cosine - velocity_.y * sine,
-                 velocity_.x * sine + velocity_.y * cosine};
-}
-
 void BreakoutGame::Start() {
+    if (status_ == Status::LevelComplete) { ++level_; LoadLevel(); }
     if (status_ == Status::Ready) status_ = Status::Playing;
 }
-
 void BreakoutGame::TogglePause() {
     if (status_ == Status::Playing) status_ = Status::Paused;
     else if (status_ == Status::Paused) status_ = Status::Playing;
 }
-
-Bounds BreakoutGame::BrickBounds(int index) {
-    return {rules::brickMargin + (index % rules::brickColumns) *
-                                    (rules::brickWidth + rules::brickGap),
-            rules::brickTop + (index / rules::brickColumns) *
-                                 (rules::brickHeight + rules::brickGap),
-            rules::brickWidth, rules::brickHeight};
+void BreakoutGame::AddImpact(Point position, ImpactKind kind) {
+    if (impacts_.size() >= rules::maximumEffects) impacts_.erase(impacts_.begin());
+    impacts_.push_back({position, kind, 0, ++impactSerial_});
 }
-
-bool BreakoutGame::BounceOffBrick(Bounds brick, Point previous) {
-    const float closestX = std::clamp(ball_.x, brick.x, brick.x + brick.width);
-    const float closestY = std::clamp(ball_.y, brick.y, brick.y + brick.height);
-    const float dx = ball_.x - closestX;
-    const float dy = ball_.y - closestY;
-    if (dx * dx + dy * dy > rules::ballRadius * rules::ballRadius) return false;
-
-    // Separate along the incoming face to prevent a second bounce on the same brick.
-    const float distance = rules::ballRadius + rules::separation;
-    if (previous.y <= brick.y - rules::ballRadius) {
-        ball_.y = brick.y - distance;
-        velocity_.y = -std::abs(velocity_.y);
-    } else if (previous.y >= brick.y + brick.height + rules::ballRadius) {
-        ball_.y = brick.y + brick.height + distance;
-        velocity_.y = std::abs(velocity_.y);
-    } else if (previous.x <= brick.x - rules::ballRadius) {
-        ball_.x = brick.x - distance;
-        velocity_.x = -std::abs(velocity_.x);
-    } else if (previous.x >= brick.x + brick.width + rules::ballRadius) {
-        ball_.x = brick.x + brick.width + distance;
-        velocity_.x = std::abs(velocity_.x);
-    } else if (std::abs(dy) >= std::abs(dx)) {
-        ball_.y = dy < 0.0f ? brick.y - distance : brick.y + brick.height + distance;
-        velocity_.y = dy < 0.0f ? -std::abs(velocity_.y) : std::abs(velocity_.y);
-    } else {
-        ball_.x = dx < 0.0f ? brick.x - distance : brick.x + brick.width + distance;
-        velocity_.x = dx < 0.0f ? -std::abs(velocity_.x) : std::abs(velocity_.x);
+void BreakoutGame::HitBrick(int index) {
+    const auto result = DamageBricks(bricks_, index);
+    for (int damaged : result.damaged) {
+        const auto bounds = CurrentBrick(damaged);
+        AddImpact({bounds.x + bounds.width / 2, bounds.y + bounds.height / 2},
+                  bricks_[damaged].kind == BrickKind::Explosive && !bricks_[damaged].Alive() ? ImpactKind::Explosion : ImpactKind::Brick);
     }
-    return true;
-}
-
-void BreakoutGame::Step(float seconds, float horizontalInput) {
-    const float previousPaddleX = paddleX_;
-    paddleX_ = std::clamp(paddleX_ + horizontalInput * rules::paddleSpeed * seconds,
-                          0.0f, rules::boardWidth - rules::paddleWidth);
-    if (status_ == Status::Ready) {
-        ball_.x = paddleX_ + rules::paddleWidth / 2.0f;
-        return;
-    }
-    const Point previous = ball_;
-    ball_.x += velocity_.x * seconds;
-    ball_.y += velocity_.y * seconds;
-    if (ball_.x < rules::ballRadius) {
-        ball_.x = rules::ballRadius;
-        velocity_.x = std::abs(velocity_.x);
-    } else if (ball_.x > rules::boardWidth - rules::ballRadius) {
-        ball_.x = rules::boardWidth - rules::ballRadius;
-        velocity_.x = -std::abs(velocity_.x);
-    }
-    if (ball_.y < rules::ballRadius) {
-        ball_.y = rules::ballRadius;
-        velocity_.y = std::abs(velocity_.y);
-    }
-
-    const float paddleVelocityX = (paddleX_ - previousPaddleX) / seconds;
-    if (BounceOffPaddle(ball_, velocity_, Paddle(), paddleVelocityX)) {
-        DeflectFromPaddle();
-    }
-    for (int index = 0; index < rules::brickCount; ++index) {
-        if (bricks_[index] && BounceOffBrick(BrickBounds(index), previous)) {
-            bricks_[index] = false;
-            score_ += rules::pointsPerBrick;
-            if (std::none_of(bricks_.begin(), bricks_.end(), [](bool brick) { return brick; })) {
-                status_ = Status::Won;
-            }
-            break;
+    for (int destroyed : result.destroyed) {
+        alive_[destroyed] = false;
+        ++combo_;
+        maxCombo_ = std::max(maxCombo_, combo_);
+        levelMaxCombo_ = std::max(levelMaxCombo_, combo_);
+        score_ += rules::pointsPerBrick * Multiplier();
+        if (++destroyed_ % rules::bricksPerDrop == 0 && drops_.size() < rules::maximumDrops) {
+            const auto bounds = CurrentBrick(destroyed);
+            const auto kind = static_cast<PowerUpKind>((destroyed_ / rules::bricksPerDrop - 1) % 3);
+            drops_.push_back({{bounds.x + bounds.width / 2, bounds.y + bounds.height / 2}, kind});
         }
     }
-    if (ball_.y - rules::ballRadius > rules::boardHeight) {
-        --lives_;
-        if (lives_ == 0) status_ = Status::GameOver;
-        else PrepareServe();
+}
+void BreakoutGame::CompleteLevel() {
+    completionBonus_ = lives_ * rules::lifeBonus;
+    score_ += completionBonus_;
+    drops_.clear();
+    status_ = level_ == rules::levelCount - 1 ? Status::Won : Status::LevelComplete;
+}
+void BreakoutGame::ActivatePowerUp(PowerUpKind kind) {
+    if (status_ != Status::Playing) return;
+    const float previousWidth = powers_.PaddleWidth();
+    powers_.Activate(kind);
+    paddleX_ += (previousWidth - powers_.PaddleWidth()) / 2;
+    paddleX_ = std::clamp(paddleX_, 0.0f, rules::boardWidth - powers_.PaddleWidth());
+    if (kind == PowerUpKind::MultiBall && !balls_.empty()) {
+        const BallState source = balls_.front();
+        while (balls_.size() < rules::maximumBalls) {
+            const float angle = balls_.size() == 1 ? -rules::multiballAngle : rules::multiballAngle;
+            BallState ball = source;
+            ball.velocity = {source.velocity.x * std::cos(angle) - source.velocity.y * std::sin(angle),
+                             source.velocity.x * std::sin(angle) + source.velocity.y * std::cos(angle)};
+            EnsureBallAngle(ball.velocity);
+            ball.trail.fill(ball.position);
+            balls_.push_back(ball);
+        }
+    }
+    AddImpact({paddleX_ + powers_.PaddleWidth() / 2, rules::paddleY}, ImpactKind::Pickup);
+}
+void BreakoutGame::UpdateDrops(float seconds) {
+    // Collect first, activate after iteration: multiball can reallocate the ball vector.
+    std::vector<PowerUpKind> collected;
+    for (auto& drop : drops_) {
+        drop.position.y += rules::dropSpeed * seconds;
+        if (DropTouchesPaddle(drop.position, Paddle())) {
+            collected.push_back(drop.kind); drop.position.y = rules::boardHeight + rules::dropRadius * 2;
+        }
+    }
+    drops_.erase(std::remove_if(drops_.begin(), drops_.end(), [](const PowerUpDrop& drop) {
+        return drop.position.y > rules::boardHeight + rules::dropRadius;
+    }), drops_.end());
+    for (auto kind : collected) ActivatePowerUp(kind);
+}
+void BreakoutGame::Update(float elapsed, float input, std::optional<float> mouseTarget) {
+    if (!std::isfinite(elapsed) || !std::isfinite(input)) return;
+    if (mouseTarget && !std::isfinite(*mouseTarget)) mouseTarget.reset();
+    if (status_ != Status::Playing && status_ != Status::Ready) return;
+    float remaining = std::clamp(elapsed, 0.0f, rules::maxFrameSeconds);
+    input = std::clamp(input, -1.0f, 1.0f);
+    if (mouseTarget) mouseTarget_ = mouseTarget;
+    if (input != 0) mouseTarget_.reset();
+    while (remaining > 0 && (status_ == Status::Playing || status_ == Status::Ready)) {
+        const float step = std::min(remaining, rules::physicsStepSeconds);
+        Step(step, input, mouseTarget_);
+        remaining -= step;
     }
 }
-
-void BreakoutGame::Update(float elapsedSeconds, float horizontalInput) {
-    if ((status_ != Status::Ready && status_ != Status::Playing) ||
-        !std::isfinite(elapsedSeconds) || !std::isfinite(horizontalInput)) return;
-    float remaining = std::clamp(elapsedSeconds, 0.0f, rules::maxFrameSeconds);
-    const float movement = std::clamp(horizontalInput, -1.0f, 1.0f);
-    while (remaining > 0.0f) {
-        const float seconds = std::min(remaining, rules::physicsStepSeconds);
-        Step(seconds, movement);
-        remaining -= seconds;
-        if (status_ != Status::Ready && status_ != Status::Playing) break;
-    }
-}
-
-}  // namespace games::breakout
+} // namespace games::breakout

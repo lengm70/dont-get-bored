@@ -52,6 +52,17 @@ int main() {
         }
         const auto empty = ui::ExtractTheme(nullptr, 0);
         Require(empty.accent.r == empty.accent.g, "Empty analysis is safe");
+        const Color redPixel{240,30,30,255};
+        ui::palette::current={}; ui::palette::target=ui::ExtractTheme(&redPixel,1);
+        const auto previousAccent=ui::palette::current.accent;
+        ui::UpdateThemeAnimation(0);
+        Require(ui::palette::current.accent.r==previousAccent.r,"Zero delta does not change theme");
+        ui::UpdateThemeAnimation(1.f/240);
+        Require(ui::palette::current.accent.r!=ui::palette::target.accent.r,"Theme color does not jump immediately");
+        for(int frame=0;frame<240;++frame) ui::UpdateThemeAnimation(1.f/240);
+        Require(ui::palette::current.accent.r==ui::palette::target.accent.r &&
+                ui::palette::current.accent.g==ui::palette::target.accent.g &&
+                ui::palette::current.accent.b==ui::palette::target.accent.b,"Theme animation converges at high FPS without integer stalls");
         std::cout << "Adaptive theme tests passed\n";
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n'; return 1;

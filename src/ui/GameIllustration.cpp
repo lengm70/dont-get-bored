@@ -1,4 +1,6 @@
 #include "ui/GameIllustration.h"
+#include "games/bomber/BomberVisual.h"
+#include "games/twentyone/PlayingCardArt.h"
 #include "games/fruit/FruitVisual.h"
 
 #include <array>
@@ -151,6 +153,13 @@ void DrawGameIllustration(GameIllustration game, Rectangle bounds, Font font) {
     DrawRectangleRounded(bounds, selection::cornerRoundness, selection::cornerSegments,
                          selection::artBackground);
     switch (game) {
+        case GameIllustration::Bomber: games::bomber::DrawBomberIcon(bounds); break;
+        case GameIllustration::TwentyOne:
+            games::twentyone::DrawPlayingCard({1,TWENTY_ONE_SPADES},
+                {canvas.Point(22,24).x,canvas.Point(22,24).y,64*canvas.scale,89.6f*canvas.scale},font);
+            games::twentyone::DrawPlayingCard({13,TWENTY_ONE_HEARTS},
+                {canvas.Point(81,47).x,canvas.Point(81,47).y,58*canvas.scale,81.2f*canvas.scale},font);
+            break;
         case GameIllustration::Snake: DrawSnake(canvas); break;
         case GameIllustration::Tetris: DrawTetris(canvas); break;
         case GameIllustration::Breakout: DrawBreakout(canvas); break;

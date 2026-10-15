@@ -1,6 +1,8 @@
 #include "ui/Theme.h"
+#include "ui/GeometricPanel.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 
 #include "raygui.h"
@@ -38,12 +40,31 @@ void ConfigureGuiStyle(Font font, float scale) {
     GuiSetStyle(DEFAULT, BORDER_COLOR_PRESSED, ColorToInt(config::accentColor));
     GuiSetStyle(DEFAULT, BASE_COLOR_PRESSED, ColorToInt(config::basePressed));
     GuiSetStyle(DEFAULT, TEXT_COLOR_PRESSED, ColorToInt(config::textColor));
+    GuiSetStyle(DEFAULT, BORDER_COLOR_DISABLED, ColorToInt(config::borderNormal));
+    GuiSetStyle(DEFAULT, BASE_COLOR_DISABLED, ColorToInt(config::baseNormal));
+    GuiSetStyle(DEFAULT, TEXT_COLOR_DISABLED, ColorToInt(config::mutedColor));
 }
 
 void DrawBackground(const UiLayout& layout, bool showAccent, Rectangle panel) {
     DrawBackgroundImage(GetScreenWidth(), GetScreenHeight());
-    DrawRectangleRounded(layout.Rect(panel), config::panelRoundness,
-                         config::panelSegments, config::panelColor);
+    // Quiet constellation geometry stays near the edges, clear of game content.
+    constexpr std::array<Vector2,8> nodes{{{48,88},{140,36},{908,110},{824,42},
+                                         {900,510},{820,572},{54,480},{138,558}}};
+    for (std::size_t index=0;index<nodes.size();index+=2) {
+        const Vector2 first=layout.Point(nodes[index].x,nodes[index].y);
+        const Vector2 second=layout.Point(nodes[index+1].x,nodes[index+1].y);
+        DrawLineEx(first,second,layout.scale,Fade(config::accentColor,.18f));
+        DrawPolyLinesEx(first,6,18*layout.scale,30,layout.scale,Fade(config::accentColor,.25f));
+        DrawPolyLinesEx(second,4,7*layout.scale,45,layout.scale,Fade(config::accentColor,.35f));
+    }
+    const Rectangle bounds=layout.Rect(panel);
+    DrawGeometricPanel(bounds,config::panelCornerCut*layout.scale,config::panelColor,
+        Fade(config::borderNormal,.55f),layout.scale);
+    const float inset=config::panelCornerCut*layout.scale;
+    const float rail=config::panelRailLength*layout.scale;
+    DrawLineEx({bounds.x+inset,bounds.y},{bounds.x+inset+rail,bounds.y},layout.scale,config::accentColor);
+    DrawLineEx({bounds.x+bounds.width-inset-rail,bounds.y+bounds.height},
+        {bounds.x+bounds.width-inset,bounds.y+bounds.height},layout.scale,config::accentColor);
     if (showAccent) {
         DrawRectangleRounded(layout.Rect(config::accentBar), config::accentRoundness,
                              config::accentSegments, config::accentColor);

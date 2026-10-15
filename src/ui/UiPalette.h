@@ -26,7 +26,7 @@ struct Colors {
     Color overlay{13, 8, 24, 225};
 };
 
-inline Colors current{};
+inline Colors current{}, target{};
 inline unsigned revision = 0;
 inline const Color& text = current.text;
 inline const Color& muted = current.muted;

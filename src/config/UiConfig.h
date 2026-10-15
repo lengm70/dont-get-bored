@@ -42,6 +42,8 @@ inline constexpr int fpsCounterX = 24;
 inline constexpr int fpsCounterY = 24;
 
 inline constexpr Rectangle panel{220, 60, 520, 480};
+inline constexpr float panelCornerCut = 14;
+inline constexpr float panelRailLength = 72;
 inline constexpr float panelRoundness = 0.08f;
 inline constexpr int panelSegments = 12;
 inline constexpr Rectangle accentBar{448, 90, 64, 5};

@@ -1,3 +1,4 @@
+#include "ui/AnimatedControls.h"
 #include "ui/MenuView.h"
 
 #include <algorithm>
@@ -46,13 +47,13 @@ MenuResult DrawMainMenu(Font font, const text::Labels& labels, const UiLayout& l
                      config::textColor, layout);
     DrawCenteredText(font, labels.subtitle, config::subtitleY, config::subtitleSize,
                      config::mutedColor, layout);
-    if (GuiButton(CenteredButton(config::mainButtonY, config::mainButtonWidth, layout),
+    if (ui::AnimatedButton(CenteredButton(config::mainButtonY, config::mainButtonWidth, layout),
                   labels.selectGame)) return {MenuAction::OpenGameSelection};
-    if (GuiButton(CenteredButton(config::mainButtonY + config::mainButtonGap,
+    if (ui::AnimatedButton(CenteredButton(config::mainButtonY + config::mainButtonGap,
                                  config::mainButtonWidth, layout), labels.settings)) {
         return {MenuAction::OpenSettings};
     }
-    if (GuiButton(CenteredButton(config::mainButtonY + 2 * config::mainButtonGap,
+    if (ui::AnimatedButton(CenteredButton(config::mainButtonY + 2 * config::mainButtonGap,
                                  config::mainButtonWidth, layout), labels.quit)) {
         return {MenuAction::Quit};
     }
@@ -63,21 +64,21 @@ MenuResult DrawSettings(Font font, app::Settings& settings,
                         const text::Labels& labels, const UiLayout& layout) {
     DrawCenteredText(font, labels.settings, config::pageTitleY,
                      config::pageTitleSize, config::textColor, layout);
-    const MenuAction tabAction = GuiButton(layout.Rect({330, 160, 140, 40}), labels.basic)
-        ? MenuAction::OpenSettings : GuiButton(layout.Rect({490, 160, 140, 40}), labels.music)
+    const MenuAction tabAction = ui::AnimatedButton(layout.Rect({330, 160, 140, 40}), labels.basic)
+        ? MenuAction::OpenSettings : ui::AnimatedButton(layout.Rect({490, 160, 140, 40}), labels.music)
         ? MenuAction::OpenMusicSettings : MenuAction::None;
 
     bool changed = false;
     DrawRowLabel(font, labels.language, 0, layout);
     int language = static_cast<int>(settings.language);
-    if (GuiComboBox(SettingsControl(0, layout), labels.languageChoices, &language)) {
+    if (ui::AnimatedComboBox(SettingsControl(0, layout), labels.languageChoices, &language)) {
         settings.language = static_cast<app::Language>(language);
         changed = true;
     }
 
     DrawRowLabel(font, labels.resolution, 1, layout);
     int resolution = static_cast<int>(settings.resolution);
-    if (GuiComboBox(SettingsControl(1, layout), text::resolutionChoices, &resolution)) {
+    if (ui::AnimatedComboBox(SettingsControl(1, layout), text::resolutionChoices, &resolution)) {
         settings.resolution = static_cast<app::Resolution>(resolution);
         changed = true;
     }
@@ -88,20 +89,20 @@ MenuResult DrawSettings(Font font, app::Settings& settings,
     for (int index = 0; index < static_cast<int>(fpsLimits.size()); ++index) {
         if (fpsLimits[index] == settings.fpsLimit) fpsIndex = index;
     }
-    if (GuiComboBox(SettingsControl(2, layout), text::fpsChoices, &fpsIndex)) {
+    if (ui::AnimatedComboBox(SettingsControl(2, layout), text::fpsChoices, &fpsIndex)) {
         settings.fpsLimit = fpsLimits[fpsIndex];
         changed = true;
     }
 
     DrawRowLabel(font, labels.background, 3, layout);
-    const MenuAction backgroundAction = GuiButton(SettingsControl(3, layout), text::MediaForLanguage(settings.language).title)
+    const MenuAction backgroundAction = ui::AnimatedButton(SettingsControl(3, layout), text::MediaForLanguage(settings.language).title)
         ? MenuAction::OpenMediaLibrary : MenuAction::None;
 
     const bool previousShowFps = settings.showFps;
-    GuiCheckBox(layout.Rect(config::fpsCheckBox), labels.showFps, &settings.showFps);
+    ui::AnimatedCheckBox(layout.Rect(config::fpsCheckBox), labels.showFps, &settings.showFps);
     changed |= settings.showFps != previousShowFps;
 
-    const MenuAction action = GuiButton(
+    const MenuAction action = ui::AnimatedButton(
         CenteredButton(config::backButtonY, config::backButtonWidth, layout), labels.back)
         ? MenuAction::Back : MenuAction::None;
     return {tabAction != MenuAction::None ? tabAction :
@@ -112,23 +113,23 @@ MenuResult DrawMusicSettings(Font font, app::Settings& settings,
                              const text::Labels& labels, const UiLayout& layout) {
     DrawCenteredText(font, labels.music, config::pageTitleY, config::pageTitleSize,
                      config::textColor, layout);
-    const MenuAction tabAction = GuiButton(layout.Rect({330, 160, 140, 40}), labels.basic)
-        ? MenuAction::OpenSettings : GuiButton(layout.Rect({490, 160, 140, 40}), labels.music)
+    const MenuAction tabAction = ui::AnimatedButton(layout.Rect({330, 160, 140, 40}), labels.basic)
+        ? MenuAction::OpenSettings : ui::AnimatedButton(layout.Rect({490, 160, 140, 40}), labels.music)
         ? MenuAction::OpenMusicSettings : MenuAction::None;
     DrawRowLabel(font, labels.music, 0, layout);
-    const MenuAction importAction = GuiButton(SettingsControl(0, layout), text::MediaForLanguage(settings.language).title)
+    const MenuAction importAction = ui::AnimatedButton(SettingsControl(0, layout), text::MediaForLanguage(settings.language).title)
         ? MenuAction::OpenMediaLibrary : MenuAction::None;
     DrawRowLabel(font, labels.musicVolume, 1, layout);
     const float previousVolume = settings.musicVolume;
-    const bool playerBackdrop = GuiButton(SettingsControl(2, layout),
+    const bool playerBackdrop = ui::AnimatedButton(SettingsControl(2, layout),
         settings.language == app::Language::Chinese ? "播放器背景" : "Player backdrop");
     char volumeText[8]{};
     std::snprintf(volumeText, sizeof(volumeText), "%d%%",
                   static_cast<int>(settings.musicVolume * 100.0f + 0.5f));
-    GuiSlider(SettingsControl(1, layout), nullptr, nullptr, &settings.musicVolume, 0.0f, 1.0f);
+    ui::AnimatedSlider(SettingsControl(1, layout), nullptr, nullptr, &settings.musicVolume, 0.0f, 1.0f);
     DrawScaledText(font, volumeText, config::settingsControlX + 108,
                    config::settingsRowY + config::settingsRowGap + 10, 18, config::textColor, layout);
-    const MenuAction action = GuiButton(
+    const MenuAction action = ui::AnimatedButton(
         CenteredButton(config::backButtonY, config::backButtonWidth, layout), labels.back)
         ? MenuAction::Back : MenuAction::None;
     return {tabAction != MenuAction::None ? tabAction : playerBackdrop ? MenuAction::OpenMediaLibrary : importAction != MenuAction::None ? importAction : action,
@@ -150,6 +151,7 @@ MenuResult DrawMenu(app::Screen screen, Font font, app::Settings& settings) {
         case app::Screen::MediaLibrary: break;
         case app::Screen::MusicSettings: return DrawMusicSettings(font, settings, labels, layout);
         case app::Screen::Fruit: break;
+        case app::Screen::TwentyOne: break;
         case app::Screen::Snake: break;
         case app::Screen::Tetris: break;
         case app::Screen::Breakout: break;
@@ -164,12 +166,22 @@ MenuResult DrawMenu(app::Screen screen, Font font, app::Settings& settings) {
 bool UpdateMusicPlayerInput() {
     return musicPlayerInput.Update(CurrentLayout(), GetMousePosition(),
                                    IsMouseButtonPressed(MOUSE_BUTTON_LEFT),
-                                   IsMouseButtonDown(MOUSE_BUTTON_LEFT));
+                                   IsMouseButtonDown(MOUSE_BUTTON_LEFT),GetFrameTime());
 }
 
 MenuResult DrawMusicPlayer(Font font, app::Settings& settings) {
     const UiLayout layout = CurrentLayout();
     const auto& labels = text::ForLanguage(settings.language);
+    if(musicPlayerInput.Animating()) {
+        const Rectangle moving=layout.Rect(musicPlayerInput.AnimatedBounds());
+        DrawPlayerBackground(moving);
+        DrawRectangleRounded(moving,.12f,8,Fade(config::baseNormal,.85f));
+        DrawRectangleRoundedLinesEx(moving,.12f,8,layout.scale,config::accentColor);
+        const float rail=std::min(moving.width,moving.height)*.35f;
+        DrawLineEx({moving.x+moving.width/2-rail,moving.y+moving.height/2},
+                   {moving.x+moving.width/2+rail,moving.y+moving.height/2},2*layout.scale,config::textColor);
+        return {};
+    }
     if (musicPlayerInput.Collapsed()) {
         const Rectangle tab = layout.Rect(musicPlayerInput.VisibleBounds());
         DrawRectangleRounded(tab, playerConfig::cornerRoundness, playerConfig::cornerSegments, config::baseNormal);
@@ -198,20 +210,20 @@ MenuResult DrawMusicPlayer(Font font, app::Settings& settings) {
     const float x = design.x + 8;
     const float width = (design.width - 32) / 3.0f;
     MenuAction action = MenuAction::None;
-    if (GuiButton(layout.Rect({x, design.y + 42, width, 30}), labels.previousMusic)) {
+    if (ui::AnimatedButton(layout.Rect({x, design.y + 42, width, 30}), labels.previousMusic)) {
         action = MenuAction::PreviousMusic;
     }
-    if (GuiButton(layout.Rect({x + width + 8, design.y + 42, width, 30}), labels.playPause)) {
+    if (ui::AnimatedButton(layout.Rect({x + width + 8, design.y + 42, width, 30}), labels.playPause)) {
         action = MenuAction::ToggleMusic;
     }
-    if (GuiButton(layout.Rect({x + 2 * (width + 8), design.y + 42, width, 30}), labels.nextMusic)) {
+    if (ui::AnimatedButton(layout.Rect({x + 2 * (width + 8), design.y + 42, width, 30}), labels.nextMusic)) {
         action = MenuAction::NextMusic;
     }
     char volumeText[8]{};
     std::snprintf(volumeText, sizeof(volumeText), "%d%%",
                   static_cast<int>(settings.musicVolume * 100.0f + 0.5f));
     const float previousVolume = settings.musicVolume;
-    GuiSlider(layout.Rect({x, design.y + 88, design.width - 16, 24}), nullptr, nullptr,
+    ui::AnimatedSlider(layout.Rect({x, design.y + 88, design.width - 16, 24}), nullptr, nullptr,
               &settings.musicVolume, 0.0f, 1.0f);
     DrawScaledText(font, volumeText, design.x + design.width / 2 - 14, design.y + 90,
                    15, config::textColor, layout);

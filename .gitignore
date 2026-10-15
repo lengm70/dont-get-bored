@@ -5,6 +5,8 @@
 !/.vscode/c_cpp_properties.json
 /config/settings.ini
 /config/highscores.ini
+/config/breakout.ini
+/config/breakout.ini.tmp
 /config/media/
 /assets/backgrounds/custom.*
 /assets/backgrounds/import-*

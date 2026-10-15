@@ -10,6 +10,7 @@ bool LoadBackgroundImage(const char* path = config::backgroundPath);
 bool ImportBackgroundImage(const std::filesystem::path& source,
                            const std::filesystem::path& destination);
 void UnloadBackgroundImage();
+void UpdateBackgroundAnimation(float seconds);
 void DrawBackgroundImage(int width, int height);
 
 }  // namespace ui

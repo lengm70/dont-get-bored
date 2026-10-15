@@ -26,6 +26,7 @@ inline constexpr float playOffsetY = 128;
 inline constexpr float nameSize = 16;
 inline constexpr float descriptionSize = 10;
 inline constexpr float playSize = 14;
+inline constexpr float cornerCut = 10, railLength = 14;
 inline constexpr float cornerRoundness = 0.10f;
 inline constexpr int cornerSegments = 10;
 inline constexpr float borderWidth = 1;

@@ -13,6 +13,7 @@ struct HighScores {
     int minesweeperEasyMilliseconds = 0;  // Zero means no completed game yet.
     int minesweeperNormalMilliseconds = 0;
     int minesweeperHardMilliseconds = 0;
+    int bomber = 0;
 };
 
 inline constexpr const char* highScoresPath = "config/highscores.ini";

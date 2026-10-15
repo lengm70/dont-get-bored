@@ -1,6 +1,6 @@
 # don't get bored
 
-A C++17 GUI collection with Snake, Tetris, Breakout, Minesweeper, Gomoku, and Fruit Merge, with Chinese and English menus. Every game starts with **Space** from its ready screen.
+A C++17 GUI collection with Snake, Tetris, Breakout, Minesweeper, Gomoku, Fruit Merge, Twenty One and Bomber, with Chinese and English menus. Every game starts with **Space** from its ready screen.
 
 ## Gomoku
 
@@ -10,16 +10,23 @@ In computer mode you play Black. Easy, Normal and Hard use pattern evaluation an
 
 The Gomoku module separates rules/state (`GomokuGame`), search (`GomokuAI`), worker lifetime (`GomokuAiTurn`), presentation constants (`GomokuConfig`) and input/rendering (`GomokuScreen`). Tests cover win directions, overlines, draws, tactical replies, cancellation and mouse mapping.
 
-## Public release: v0.2.4
+## v0.3.0 — Stable release
 
-- Six games, including Fruit Merge with eleven levels and persistent best score.
-- Rotating geometric energy orbs, mass-dependent collisions, elastic rebounds and contact friction.
-- Music player snaps to all four window edges after dragging; click the arrow tab to expand.
-- Two-row game selection, bilingual labels and seven passing CTest targets.
+Eight games, with Chinese and English menus and a consistent geometric science-fiction interface.
 
-Download the full Windows x64 ZIP from [GitHub Releases](https://github.com/lengm70/dont-get-bored/releases/tag/v0.2.4), extract it and run `dont_get_bored.exe`. Keep the DLLs and assets beside the EXE.
+- **Bomber:** three solo sectors, local two-player duels, configurable target wins, chain reactions, equipment and persistent solo best.
+- **Breakout:** five sectors, armored/explosive/moving bricks, obstacles, paddle/mouse improvements, three drops, combos, unlocks and persistent records.
+- **Twenty One:** up to four players/AI, configurable starting funds and rounds, raising with a draw, pots/side pots, an orbiting table and animated turns.
+- **Shared UI:** adaptive colors from the background, animated controls and transitions, illustrated game cards, custom background/music libraries and an edge-docking player.
+- Windows icon and file metadata identify the stable v0.3.0 build. Previous settings and records remain compatible.
 
-## Development history: v0.3.0-beta.3
+### Download and run
+
+Download **dont-get-bored-v0.3.0-windows-x64.zip** from Releases, extract the entire archive, and double-click `dont_get_bored.exe`. Keep its DLLs and `assets` folder alongside it. No compiler or MSYS2 installation is needed to play. Settings, imported media and records are created locally after launch.
+
+The separately attached EXE is the same game executable, for use with the archive's support files. **dont-get-bored-v0.3.0-source.zip** contains source and default assets; GitHub also provides automatic source archives. `SHA256SUMS.txt` lists attachment hashes.
+
+## Previous internal beta: v0.3.0-beta.3
 
 - UI colors adapt automatically to the main background's dominant hue.
 - Menus, controls, cards and game surfaces share the generated palette.
@@ -72,7 +79,30 @@ Open **Select Game / 选择游戏** and choose **Tetris / 俄罗斯方块**. Pre
 
 ## Breakout
 
-Choose **Breakout / 打砖块**. Move the paddle with Left/Right or A/D, and press Space to serve. Hit all 50 bricks to win; missing the ball costs one of three lives. After losing a life, press Space to serve again. Paddle impact position determines the bounce angle. Press P to pause or resume, R to reset the board, and Esc to return. Physics uses small time steps independently of the display FPS cap.
+Choose **Breakout / 打砖块**. There are five progressively harder sectors: First Contact, Armor Array, Chain Reaction, Orbital Shift and Core Breach. Clear a sector to unlock the next one; use Up/Down or click a sector number on the ready screen to replay an unlocked sector.
+
+- **Controls:** move the mouse inside the board, or use Left/Right / A/D. Space serves or advances after clearing a sector; the starting key never moves the ball immediately. P pauses, R starts a fresh run at the current sector, Esc returns, and S toggles screen shake (saved).
+- **Feel:** short paddle acceleration and braking; impact position and paddle motion control the rebound angle. Circle collisions include paddle corners and sides. Small physics steps keep motion independent of the display FPS cap, with minimum bounce angles preventing horizontal and vertical loops.
+- **Bricks:** armor needs two hits (three in the final sector); explosives damage eight neighboring cells and can trigger chains. Moving bricks shift sideways. Cross-marked solid obstacles cannot be destroyed and are excluded from the victory condition.
+- **Drops:** every six destroyed bricks produces the next of three cyclic drops, with at most three falling at once: paddle extension for 12 seconds, up to three balls, or a shield that absorbs one falling ball. Collect with the paddle. Repeat pickups refresh extension or shield without stacking; all balls must fall before one life is lost. Buff timers and movement freeze when paused; buffs clear after losing a life or advancing a sector.
+- **Scoring:** each brick is worth 10 points. Every five consecutive destroyed bricks raises the multiplier, up to x4. A lost life resets the combo. Each sector completion awards 100 points per remaining life and displays score, maximum combo and life bonus. Score and remaining lives continue to the next sector.
+- **Persistence:** overall best remains in `config/highscores.ini`; unlocked sectors, completed-sector bests, campaign best and shake preference are saved in `config/breakout.ini`. The latter is created on first launch and written through a temporary file so a failed save preserves the previous copy. Both personal files are ignored by Git; `config/breakout.example.ini` documents defaults.
+- **Feedback:** geometric bricks with health markers, cyan ball trails, impact flashes, blast fragments and optional contained screen shake match the collection's science-fiction style. All gameplay effects stay clipped to the board.
+
+## Bomber / 炸弹人
+
+Select **Bomber / 炸弹人** on the second page of game selection. Choose **Solo campaign** or **Local duel**; duels allow a target of 1–9 wins (default 3). Press **Space** or click the start button. The starting press does not also plant a bomb.
+
+- **Solo:** WASD or arrows move; F or Space plants. Clear three sectors by eliminating all drones. You have three lives, with two, three and four drones in successive sectors. Drones pursue or patrol and use pathfinding to escape predicted blast lanes, including chain reactions; they do not plant bombs. Contact with a drone or any active blast, including your own, costs a life.
+- **Local duel:** P1 uses WASD and F; P2 uses arrows and Enter. Both play simultaneously on a rotationally symmetric arena. Last survivor wins the round; simultaneous elimination is a draw and awards no wins. First to the configured number of wins takes the match. Keyboard hardware may limit how many keys can register at once.
+- **Shared controls:** P pauses movement, fuses and the round timer. R returns to setup and resets the match. Esc returns to game selection. Space advances after a lost life, cleared sector or finished duel round. Each arena has a three-minute limit: timeout loses a solo life or draws a duel round.
+- **Explosions:** bombs detonate after 2.3 seconds. Cross-shaped blasts stop at solid walls and the first crate or bomb. Bombs trigger other bombs immediately. Simultaneous explosions use a shared map snapshot, so destroying a crate cannot let another ray pass through it in the same chain reaction. A brief settlement window allows simultaneous casualties to resolve fairly.
+- **Movement:** continuous cardinal movement, latest-pressed direction priority and gentle corridor alignment make corners forgiving. A newly planted bomb lets any overlapping actor leave; that actor cannot pass through it again after leaving.
+- **Equipment:** some crates reveal blue capacity, orange range and green speed upgrades. Limits are five active bombs, seven cells of range and 5.3 cells/second. New drops remain protected until the initial flame fades; later explosions can destroy exposed drops. Upgrades carry to the next solo sector, reset after losing a life, and reset each duel round.
+- **Scoring:** solo awards 10 per crate, 100 per drone and 300 times the sector number for clearing it. The solo best persists in `config/highscores.ini` under `bomber`; old game records remain compatible. Duel rounds do not affect solo records.
+- **Art:** hexagonal energy cores, cyan/pink players, violet drones, bomb fuse rings, predicted blast cells, cross-beams, crate fragments and colored pickup pulses match the collection's geometric science-fiction style. Effects are clipped to the arena.
+
+Code lives in `src/games/bomber/`: map generation, match rules, movement, explosions, AI and upgrades form a raylib-independent logic library; input/presentation, drawing, labels and visual configuration remain separate. `tests/BomberTests.cpp` covers map fairness, escape routes, chain reactions, collision, simultaneous outcomes, campaign/duel flow, AI safety, upgrade limits, frame rates and persistent records. Input adapter coverage is in `tests/GameInputTests.cpp`.
 
 ## Minesweeper
 
@@ -80,7 +110,7 @@ Choose **Minesweeper / 扫雷**, select Easy, Normal, Hard or Custom, then press
 
 ## High scores
 
-Snake, Tetris, and Breakout each keep their own best score. Minesweeper keeps separate shortest winning times in milliseconds for Easy, Normal and Hard (`minesweeper_easy_ms`, `minesweeper_normal_ms`, `minesweeper_hard_ms`; zero means no record yet). Custom games are not recorded. Old `minesweeper_best_ms` records migrate to Easy. Records are stored in `config/highscores.ini` and remain after restarting. Existing Snake/Tetris records load without migration; missing new keys default to zero. This personal file is ignored by Git; `config/highscores.example.ini` shows the defaults.
+Snake, Tetris, Breakout, Fruit Merge and solo Bomber each keep their own best score. Minesweeper keeps separate shortest winning times in milliseconds for Easy, Normal and Hard (`minesweeper_easy_ms`, `minesweeper_normal_ms`, `minesweeper_hard_ms`; zero means no record yet). Custom games are not recorded. Old `minesweeper_best_ms` records migrate to Easy. Records are stored in `config/highscores.ini` and remain after restarting. Existing Snake/Tetris records load without migration; missing new keys default to zero. This personal file is ignored by Git; `config/highscores.example.ini` shows the defaults.
 
 ## Settings
 
@@ -123,7 +153,11 @@ The menu font is a subset of [Noto Sans SC](https://github.com/google/fonts/tree
 - `src/games/snake/SnakeScreen.*`: snake input and rendering.
 - `src/games/tetris/TetrisGame.*`: Tetris rules and state, independent of raylib.
 - `src/games/tetris/TetrisScreen.*`: Tetris input and rendering.
-- `src/games/breakout/BreakoutGame.*`: ball, paddle, bricks, collisions, and lives, independent of raylib.
+- `src/games/breakout/BreakoutGame.*` / `BreakoutPhysics.cpp`: campaign lifecycle, scoring and fixed-step motion, independent of raylib.
+- `src/games/breakout/BreakoutLevels.*`: five sector layouts, brick damage and explosion chains.
+- `src/games/breakout/BreakoutPowerUps.*`: pickup types, buff timers and collision checks.
+- `src/games/breakout/BreakoutProgress.*`: validated persistent unlocks, bests and shake preference.
+- `src/games/breakout/BreakoutVisual.*` / `BreakoutConfig.h` / `BreakoutLabels.h`: geometric effects, visual configuration and Chinese/English text.
 - `src/games/breakout/BreakoutScreen.*`: Breakout input and rendering.
 - `src/games/minesweeper/MinesweeperGame.*`: board generation, reveals, flags, timer, and win/loss rules, independent of raylib.
 - `src/games/minesweeper/MinesweeperScreen.*`: Minesweeper mouse input and rendering.
@@ -156,3 +190,22 @@ ctest --test-dir build --output-on-failure
 ```
 
 Tests cover first-reveal safety, flood reveals, flags, pause/timing, win/loss states, Breakout collisions and life transitions, record persistence and old-file compatibility, Space start behavior, and Minesweeper mouse mapping at all supported resolutions. Input adapters are tested with substituted input queries so a graphical window is not required.
+
+
+## 21 点 / Twenty One
+
+进入二十一点后先配置对局，按空格开始。初始资金默认 1000（50–1000000），轮数默认 10（1–100），支持 2–4 席；每席可选择本地玩家或 AI，至少一位玩家。所有席位使用同一键鼠轮流行动，高亮框标记当前席位。每轮使用洗牌后的共享 52 张牌，不重复抽同一张。
+
+每轮每席底注 50；资金不足时投入剩余资金。D / 普通抽牌免费；B / 加注并抽牌投入所选金额；H / 停牌。加注金额不能超过可用资金。所有未结束的席位轮流行动；AI 每 0.85 秒行动，低于 17 点抽牌，部分中等点数选择加注。21 点自动停牌，爆牌不能继续行动。
+
+轮末按投入额逐层建立筹码池：每个分池只由投入该层且未爆牌的席位竞争，最高点数者获胜。平局均分；无法整除的余数按席位顺序分配。某层所有有资格席位均爆牌时，该层原额退回贡献者。零资金席位退出后续轮次，剩余一席有资金时提前结束。完成指定轮数后，资金最多者获胜；并列资金允许共同获胜。
+
+空格 / 下一轮；R 返回设置，Esc 返回游戏选择。资金属于当前对局，不写入永久最高分或设置文件。牌面规则继续使用纯 C 的 `TwentyOne.c`；多轮状态在 `TwentyOneMatch`，资金结算在 `TwentyOneEconomy`，界面与常量分别在 Screen / ScreenConfig 中。纸牌与背景保持科幻几何风格和自动主题配色。
+
+Tests additionally cover side-pot eligibility, ties/remainders, all-bust refunds, invalid raises, shared deck uniqueness, round progression, bankruptcy, AI turns and conservation of total funds across simulated matches.
+
+### Motion and round-table presentation
+
+二十一点采用透视圆桌：席位围绕桌面排列，轮到下一席时沿最短角度平滑转动视角，并淡入前景手牌；切换期间暂缓出牌和 AI 操作。支持发牌滑入、总分脉冲、资金数值过渡，以及结算面板入场。动画只管理展示，不改变牌面、轮数和筹码结算规则。
+
+菜单/设置/游戏操作按钮增加平滑悬停与按压反馈、点击波纹；选项、数值输入、滑条、勾选也有反馈。游戏卡片悬停抬升，页面短渐显，背景图片交叉淡化和主题色渐变。播放器吸附收起及展开使用矩形插值，动画期间不激活隐藏控件。时间参数集中在 `ui/AnimationConfig.h` 和 `MusicPlayerConfig.h`；核心插值在 `ui/Motion.h`，具有独立测试。

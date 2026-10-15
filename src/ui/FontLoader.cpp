@@ -1,10 +1,14 @@
 #include "ui/FontLoader.h"
+#include "games/bomber/BomberLabels.h"
+#include "games/breakout/BreakoutLabels.h"
 
 #include <algorithm>
 #include <vector>
 
 #include "config/UiConfig.h"
 #include "ui/UiText.h"
+#include "games/twentyone/TwentyOneLabels.h"
+#include "games/twentyone/TwentyOneMatchLabels.h"
 
 namespace ui {
 
@@ -26,10 +30,24 @@ Font LoadMenuFont(const std::vector<std::string>& additionalText) {
     for (const auto* labels : {&text::fruitChinese, &text::fruitEnglish}) {
         for (const char* label : text::AllLabels(*labels)) collect(label);
     }
+    for (const auto* labels : {&games::twentyone::matchChinese, &games::twentyone::matchEnglish}) {
+        for (const char* label : games::twentyone::AllLabels(*labels)) collect(label);
+    }
+    for (const auto* labels : {&games::breakout::campaignChinese, &games::breakout::campaignEnglish}) {
+        for (const char* label : games::breakout::AllLabels(*labels)) collect(label);
+    }
+    for (const auto* labels : {&games::bomber::chinese, &games::bomber::english}) {
+        for (const char* label : games::bomber::AllLabels(*labels)) collect(label);
+    }
     collect(text::title);
+    collect("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
+    for (const auto* labels : {&games::twentyone::chinese, &games::twentyone::english}) {
+        for (const char* label : games::twentyone::AllLabels(*labels)) collect(label);
+    }
     collect(text::resolutionChoices);
     collect(text::fpsChoices);
     collect(text::generatedTextGlyphs);
+    collect("+-().");
     for (const auto* labels : {&text::chinese, &text::english}) {
         for (const char* label : text::AllLabels(*labels)) collect(label);
     }

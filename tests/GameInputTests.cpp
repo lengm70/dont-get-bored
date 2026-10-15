@@ -1,8 +1,10 @@
 #include <array>
+#include <cmath>
 #include <iostream>
 #include <stdexcept>
 
 #include "raylib.h"
+#include "games/bomber/BomberScreen.h"
 #include "games/fruit/FruitScreen.h"
 #include "games/breakout/BreakoutScreen.h"
 #include "games/minesweeper/MinesweeperConfig.h"
@@ -18,13 +20,13 @@
 namespace {
 std::array<bool, 512> keys{};
 std::array<bool, 8> buttons{};
-Vector2 mouse{};
+Vector2 mouse{}, mouseDelta{};
 int width = 960, height = 600;
 constexpr float seconds = 1.0f / 60.0f;
 void Require(bool value, const char* message) {
     if (!value) throw std::runtime_error(message);
 }
-void Clear() { keys.fill(false); buttons.fill(false); }
+void Clear() { keys.fill(false); buttons.fill(false); mouseDelta = {}; }
 }
 
 // Substitute input/window queries so real screen adapters are tested without a GUI.
@@ -33,7 +35,7 @@ bool IsKeyPressed(int key) { return keys.at(key); }
 bool IsKeyDown(int key) { return keys.at(key); }
 bool IsKeyPressedRepeat(int) { return false; }
 bool IsMouseButtonPressed(int button) { return buttons.at(button); }
-Vector2 GetMouseDelta() { return {}; }
+Vector2 GetMouseDelta() { return mouseDelta; }
 Vector2 GetMousePosition() { return mouse; }
 int GetScreenWidth() { return width; }
 int GetScreenHeight() { return height; }
@@ -41,6 +43,38 @@ int GetScreenHeight() { return height; }
 
 int main() {
     try {
+        namespace bomber = games::bomber;
+        bomber::BomberGame bomberGame(42); bomber::ViewState bomberView;
+        Clear(); keys[KEY_SPACE] = true;
+        bomber::UpdateFromInput(bomberGame,bomberView,seconds);
+        Require(!bomberView.setup && bomberGame.State() == bomber::Status::Playing && bomberGame.Bombs().empty(),
+                "Bomber Space starts without planting or moving");
+        Clear(); keys[KEY_SPACE] = true;
+        bomber::UpdateFromInput(bomberGame,bomberView,seconds);
+        Require(bomberGame.Bombs().size() == 1,"Solo Space plants after starting");
+        Clear(); keys[KEY_P] = true;
+        bomber::UpdateFromInput(bomberGame,bomberView,seconds);
+        const float bombFuse = bomberGame.Bombs()[0].remaining;
+        Clear(); keys[KEY_D] = true; keys[KEY_F] = true;
+        bomber::UpdateFromInput(bomberGame,bomberView,seconds);
+        Require(bomberGame.State() == bomber::Status::Paused && bomberGame.Bombs()[0].remaining == bombFuse,
+                "Bomber pause freezes fuse and ignores gameplay input");
+        Clear(); keys[KEY_R] = true;
+        bomber::UpdateFromInput(bomberGame,bomberView,seconds);
+        Require(bomberView.setup && bomberGame.Bombs().empty(),"Bomber R returns to a fresh setup");
+        bomberView.options = {bomber::Mode::Duel,4};
+        Clear(); keys[KEY_SPACE] = true; bomber::UpdateFromInput(bomberGame,bomberView,seconds);
+        Require(bomberGame.Actors().size() == 2 && bomberGame.Progress().Settings().targetWins == 4,
+                "Duel starts with two human players and selected match length");
+        const float p1x = bomberGame.Actors()[0].position.x, p2x = bomberGame.Actors()[1].position.x;
+        Clear(); keys[KEY_D] = true; keys[KEY_LEFT] = true;
+        bomber::UpdateFromInput(bomberGame,bomberView,seconds);
+        Require(bomberGame.Actors()[0].position.x > p1x && bomberGame.Actors()[1].position.x < p2x,
+                "Both keyboard players move independently in the same frame");
+        Clear(); keys[KEY_F] = true; keys[KEY_ENTER] = true;
+        bomber::UpdateFromInput(bomberGame,bomberView,seconds);
+        Require(bomberGame.Bombs().size() == 2,"Both players can plant simultaneously");
+        Clear();
         games::fruit::FruitGame fruitGame(42);
         Clear(); keys[KEY_SPACE] = true;
         games::fruit::UpdateFromInput(fruitGame, seconds);
@@ -128,6 +162,37 @@ int main() {
         games::breakout::UpdateFromInput(breakout, seconds);
         Require(breakout.State() == games::breakout::Status::Paused, "P pauses Breakout");
 
+        Clear();
+        breakout.Reset();
+        mouse = {700,300}; mouseDelta = {20,0};
+        const float paddleX = breakout.Paddle().x;
+        games::breakout::UpdateFromInput(breakout,seconds,true);
+        Require(breakout.Paddle().x == paddleX,"Music player capture blocks Breakout mouse movement");
+        games::breakout::UpdateFromInput(breakout,seconds);
+        Require(breakout.Paddle().x > paddleX,"Moving cursor controls the paddle inside the board");
+        Clear(); mouse = {700,300};
+        for (int frame = 0; frame < 120; ++frame) games::breakout::UpdateFromInput(breakout,seconds);
+        Require(std::abs(breakout.Paddle().x + breakout.Paddle().width / 2 - 540) < 1,
+                "Stationary cursor remains the target after initiating mouse control");
+        Clear(); keys[KEY_LEFT] = true;
+        const float beforeKeyboard = breakout.Paddle().x;
+        games::breakout::UpdateFromInput(breakout,seconds,true);
+        Require(breakout.Paddle().x < beforeKeyboard,"Keyboard works while player captures mouse");
+        Clear(); breakout.Reset();
+        games::breakout::Progress progress; progress.unlockedLevels = 3;
+        keys[KEY_DOWN] = true;
+        games::breakout::UpdateFromInput(breakout,seconds,false,&progress);
+        Require(breakout.Level() == 1,"Down selects an unlocked sector");
+        games::breakout::UpdateFromInput(breakout,seconds,false,&progress);
+        games::breakout::UpdateFromInput(breakout,seconds,false,&progress);
+        Require(breakout.Level() == 2,"Selection cannot enter locked sectors");
+        Clear(); keys[KEY_SPACE] = true;
+        games::breakout::UpdateFromInput(breakout,seconds,false,&progress);
+        const auto served = breakout.Ball();
+        Clear(); keys[KEY_DOWN] = true;
+        games::breakout::UpdateFromInput(breakout,seconds,false,&progress);
+        Require(breakout.Level() == 2 && breakout.Ball().y < served.y,"Selection is disabled during play");
+
         namespace mines = games::minesweeper;
         for (const auto size : std::array<std::array<int, 2>, 5>{{
                  {960, 600}, {1280, 720}, {1920, 1080}, {2560, 1440}, {3840, 2160}}}) {
@@ -146,6 +211,9 @@ int main() {
                 docked.Update(layout, destination, false, true);
                 Require(docked.Update(layout, destination, false, false), "Dock release captures underlying input");
                 Require(docked.Collapsed() && docked.Dock() == edge, "Player docks to nearest edge");
+                Require(docked.Animating(), "Docking starts a visible transition");
+                for(int frame=0;frame<90;++frame) docked.Update(layout, {-100,-100}, false, false);
+                Require(!docked.Animating(), "Dock animation settles");
                 const Rectangle tab = layout.Rect(docked.VisibleBounds());
                 Require(tab.x >= -0.1f && tab.y >= -0.1f && tab.x + tab.width <= width + 0.1f && tab.y + tab.height <= height + 0.1f, "Collapsed tab stays in actual window bounds");
                 const auto full = layout.Rect(docked.DesignBounds());
@@ -155,6 +223,8 @@ int main() {
                 Require(docked.SuppressControls(), "Expansion press cannot activate player buttons");
                 Require(docked.Update(layout, arrow, false, false), "Expansion release captured");
                 Require(docked.SuppressControls(), "Expansion release cannot activate player buttons");
+                for(int frame=0;frame<90;++frame) docked.Update(layout, {-100,-100}, false, false);
+                Require(!docked.Animating(), "Expansion animation settles");
                 docked.Update(layout, layout.Point(300, 250), false, false);
                 Require(!docked.Collapsed(), "Expanded player does not immediately collapse again");
             }

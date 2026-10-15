@@ -1,3 +1,4 @@
+#include "ui/AnimatedControls.h"
 #include "ui/MediaLibraryView.h"
 #include <algorithm>
 #include "raygui.h"
@@ -12,7 +13,7 @@ MenuResult DrawMediaLibrary(Font font, app::Language language, const media::Medi
     const auto& labels = text::MediaForLanguage(language);
     DrawBackground(layout, false, mediaConfig::panel);
     DrawCenteredText(font, labels.title, mediaConfig::titleY, mediaConfig::titleSize, config::textColor, layout);
-    const bool categoryChanged = GuiComboBox(layout.Rect(mediaConfig::category), labels.categories, &state.category);
+    const bool categoryChanged = ui::AnimatedComboBox(layout.Rect(mediaConfig::category), labels.categories, &state.category);
     if (categoryChanged) {
         state.selected = state.scroll = 0; state.failed = false;
     }
@@ -33,10 +34,10 @@ MenuResult DrawMediaLibrary(Font font, app::Language language, const media::Medi
     const bool active = state.selected == 0 ? current->empty() : *current == entries[state.selected - 1].path;
     DrawCenteredText(font, state.failed ? labels.failure : active ? labels.current : labels.hint,
                      mediaConfig::statusY, mediaConfig::statusSize, config::mutedColor, layout);
-    if (GuiButton(layout.Rect(mediaConfig::importButton), labels.import)) return {MenuAction::ImportMedia};
-    if (GuiButton(layout.Rect(mediaConfig::useButton), labels.use)) return {MenuAction::UseMedia};
-    if (GuiButton(layout.Rect(mediaConfig::defaultButton), labels.restore)) { state.selected = 0; return {MenuAction::UseMedia}; }
-    if (GuiButton(layout.Rect(mediaConfig::backButton), text::ForLanguage(language).back)) return {MenuAction::Back};
+    if (ui::AnimatedButton(layout.Rect(mediaConfig::importButton), labels.import)) return {MenuAction::ImportMedia};
+    if (ui::AnimatedButton(layout.Rect(mediaConfig::useButton), labels.use)) return {MenuAction::UseMedia};
+    if (ui::AnimatedButton(layout.Rect(mediaConfig::defaultButton), labels.restore)) { state.selected = 0; return {MenuAction::UseMedia}; }
+    if (ui::AnimatedButton(layout.Rect(mediaConfig::backButton), text::ForLanguage(language).back)) return {MenuAction::Back};
     return {};
 }
 }

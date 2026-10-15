@@ -36,7 +36,7 @@ std::optional<Contact> FindContact(Point ball, Bounds paddle) {
 
 }  // namespace
 
-bool BounceOffPaddle(Point& ball, Point& velocity, Bounds paddle, float paddleVelocityX) {
+bool BounceOffPaddle(Point& ball, Point& velocity, Bounds paddle, float paddleVelocityX, float desiredSpeed) {
     const auto contact = FindContact(ball, paddle);
     if (!contact) return false;
     const Point normal = contact->normal;
@@ -50,21 +50,49 @@ bool BounceOffPaddle(Point& ball, Point& velocity, Bounds paddle, float paddleVe
     if (normal.x == 0.0f && normal.y == -1.0f) {
         const float offset = std::clamp(
             (ball.x - paddle.x - paddle.width / 2.0f) / (paddle.width / 2.0f), -1.0f, 1.0f);
-        const float angle = offset * rules::maximumBounceAngle;
-        velocity = {rules::ballSpeed * std::sin(angle), -rules::ballSpeed * std::cos(angle)};
+        const float angle = std::clamp(offset * rules::maximumBounceAngle +
+            paddleVelocityX / rules::paddleSpeed * rules::paddleInfluence,
+            -rules::maximumBounceAngle, rules::maximumBounceAngle);
+        velocity = {desiredSpeed * std::sin(angle), -desiredSpeed * std::cos(angle)};
     } else {
         // Reflect relative to the paddle, then return to world velocity.
         velocity.x -= 2.0f * incoming * normal.x;
         velocity.y -= 2.0f * incoming * normal.y;
         const float speed = std::hypot(velocity.x, velocity.y);
         if (speed > 0.0f) {
-            velocity.x *= rules::ballSpeed / speed;
-            velocity.y *= rules::ballSpeed / speed;
+            velocity.x *= desiredSpeed / speed;
+            velocity.y *= desiredSpeed / speed;
         } else {
-            velocity = {normal.x * rules::ballSpeed, normal.y * rules::ballSpeed};
+            velocity = {normal.x * desiredSpeed, normal.y * desiredSpeed};
         }
     }
     return true;
 }
 
+
+bool BounceOffRectangle(Point& ball, Point& velocity, Bounds bounds, float velocityX) {
+    const auto contact = FindContact(ball, bounds);
+    if (!contact) return false;
+    const Point normal = contact->normal;
+    ball.x += normal.x * (contact->penetration + rules::separation);
+    ball.y += normal.y * (contact->penetration + rules::separation);
+    const float incoming = (velocity.x - velocityX) * normal.x + velocity.y * normal.y;
+    if (incoming >= 0) return false;
+    velocity.x -= 2 * incoming * normal.x;
+    velocity.y -= 2 * incoming * normal.y;
+    return true;
+}
+void EnsureBallAngle(Point& velocity) {
+    const float speed = std::hypot(velocity.x, velocity.y);
+    if (speed == 0) return;
+    if (std::abs(velocity.y) < speed * rules::minimumVerticalRatio) {
+        velocity.y = std::copysign(speed * rules::minimumVerticalRatio, velocity.y == 0 ? -1.0f : velocity.y);
+        velocity.x = std::copysign(std::sqrt(speed * speed - velocity.y * velocity.y), velocity.x);
+    }
+    // Avoid repeating a perfectly vertical column after a center hit.
+    if (std::abs(velocity.x) < speed * rules::minimumHorizontalRatio) {
+        velocity.x = std::copysign(speed * rules::minimumHorizontalRatio, velocity.x);
+        velocity.y = std::copysign(std::sqrt(speed * speed - velocity.x * velocity.x), velocity.y);
+    }
+}
 }  // namespace games::breakout

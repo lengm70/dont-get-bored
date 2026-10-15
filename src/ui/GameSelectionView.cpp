@@ -1,8 +1,12 @@
+#include "ui/AnimatedControls.h"
 #include "ui/GameSelectionView.h"
+#include "games/bomber/BomberLabels.h"
+#include "ui/GeometricPanel.h"
 
 #include <array>
 
 #include "raygui.h"
+#include "games/twentyone/TwentyOneLabels.h"
 #include "config/UiConfig.h"
 #include "ui/GameIllustration.h"
 #include "ui/GameSelectionConfig.h"
@@ -31,7 +35,7 @@ bool CardButton(Rectangle bounds) {
         saved[index] = GuiGetStyle(BUTTON, properties[index]);
         GuiSetStyle(BUTTON, properties[index], 0);
     }
-    const bool activated = GuiButton(bounds, nullptr);
+    const bool activated = ui::AnimatedButton(bounds, nullptr);
     for (std::size_t index = 0; index < properties.size(); ++index) {
         GuiSetStyle(BUTTON, properties[index], saved[index]);
     }
@@ -40,20 +44,26 @@ bool CardButton(Rectangle bounds) {
 
 bool DrawCard(const Entry& entry, Rectangle design, Font font, const char* play,
               const UiLayout& layout) {
-    const Rectangle bounds = layout.Rect(design);
-    const bool activated = CardButton(bounds);
+    const Rectangle hitBounds=layout.Rect(design);
+    const bool activated = CardButton(hitBounds);
+    const auto effect=ui::GetControlMotion(hitBounds,nullptr);
+    design.y-=effect.hover*3-effect.pressed*2;
+    const Rectangle bounds=layout.Rect(design);
     const bool hovered = !GuiIsLocked() && GuiGetState() != STATE_DISABLED &&
-                         CheckCollisionPointRec(GetMousePosition(), bounds);
+                         CheckCollisionPointRec(GetMousePosition(), hitBounds);
     const bool pressed = hovered && IsMouseButtonDown(MOUSE_BUTTON_LEFT);
     Rectangle shadow = bounds;
     shadow.y += selection::shadowOffset * layout.scale;
-    DrawRectangleRounded(shadow, selection::cornerRoundness, selection::cornerSegments,
-                         selection::shadowColor);
-    DrawRectangleRounded(bounds, selection::cornerRoundness, selection::cornerSegments,
-                         pressed ? selection::pressedColor : hovered ? selection::focusedColor : selection::cardColor);
-    DrawRectangleRoundedLinesEx(bounds, selection::cornerRoundness, selection::cornerSegments,
-        (hovered ? selection::focusBorderWidth : selection::borderWidth) * layout.scale,
-        hovered ? entry.accent : selection::borderColor);
+    DrawGeometricPanel(shadow, selection::cornerCut * layout.scale, selection::shadowColor, BLANK, 0);
+    const Color border = hovered ? entry.accent : selection::borderColor;
+    DrawGeometricPanel(bounds, selection::cornerCut * layout.scale,
+        pressed ? selection::pressedColor : hovered ? selection::focusedColor : selection::cardColor,
+        border, (hovered ? selection::focusBorderWidth : selection::borderWidth) * layout.scale);
+    // Short illuminated rails echo the playing-card frame.
+    const float rail = selection::railLength * layout.scale;
+    DrawLineEx({bounds.x + rail, bounds.y}, {bounds.x + 2 * rail, bounds.y}, 2 * layout.scale, entry.accent);
+    DrawLineEx({bounds.x + bounds.width - 2 * rail, bounds.y + bounds.height},
+               {bounds.x + bounds.width - rail, bounds.y + bounds.height}, layout.scale, Fade(entry.accent, 0.7f));
     const Rectangle artwork = layout.Rect({design.x + selection::contentPadding,
         design.y + selection::illustrationOffsetY, selection::illustrationHeight,
         selection::illustrationHeight});
@@ -61,8 +71,12 @@ bool DrawCard(const Entry& entry, Rectangle design, Font font, const char* play,
     const float textX = design.x + 2 * selection::contentPadding + selection::illustrationHeight;
     DrawScaledText(font, entry.name, textX, design.y + selection::titleOffsetY,
                    selection::nameSize, config::textColor, layout);
-    DrawScaledText(font, entry.description, textX, design.y + selection::descriptionOffsetY,
-                   selection::descriptionSize, config::mutedColor, layout);
+    const float available = (design.x + design.width - selection::contentPadding - textX) * layout.scale;
+    const float measured = MeasureTextEx(font,entry.description,
+        selection::descriptionSize*layout.scale,config::textSpacing*layout.scale).x;
+    const float factor = measured > available ? available / measured : 1.f;
+    DrawTextEx(font,entry.description,layout.Point(textX,design.y+selection::descriptionOffsetY),
+        selection::descriptionSize*layout.scale*factor,config::textSpacing*layout.scale*factor,config::mutedColor);
     DrawScaledText(font, play, textX, design.y + selection::playOffsetY,
                    selection::playSize, entry.accent, layout);
     const Vector2 arrow = layout.Point(design.x + design.width - selection::arrowInset,
@@ -81,7 +95,7 @@ MenuResult DrawGameSelection(Font font, app::Language language, const UiLayout& 
                      selection::titleSize, config::textColor, layout);
     DrawCenteredText(font, labels.subtitle, selection::subtitleY, selection::subtitleSize,
                      config::mutedColor, layout);
-    const std::array<Entry, selection::cardCount> entries{{
+    const std::array<Entry, 8> entries{{
         {text::SnakeForLanguage(language).name, labels.snakeHint,
          GameIllustration::Snake, MenuAction::StartSnake, config::accentColor},
         {text::TetrisForLanguage(language).name, labels.tetrisHint,
@@ -93,18 +107,29 @@ MenuResult DrawGameSelection(Font font, app::Language language, const UiLayout& 
         {text::GomokuForLanguage(language).name, labels.gomokuHint,
          GameIllustration::Gomoku, MenuAction::StartGomoku, config::accentColor},
         {text::FruitForLanguage(language).name, labels.fruitHint,
-         GameIllustration::Fruit, MenuAction::StartFruit, config::accentColor}
+         GameIllustration::Fruit, MenuAction::StartFruit, config::accentColor},
+        {games::twentyone::ForLanguage(language).title, games::twentyone::ForLanguage(language).description,
+         GameIllustration::TwentyOne, MenuAction::StartTwentyOne, config::accentColor},
+        {games::bomber::ForLanguage(language).name, games::bomber::ForLanguage(language).description,
+         GameIllustration::Bomber, MenuAction::StartBomber, config::accentColor}
     }};
+    static int page = 0;
+    const int pageCount = (static_cast<int>(entries.size()) + selection::cardCount - 1) / selection::cardCount;
+    if (ui::AnimatedButton(layout.Rect({300,509,60,38}), "<")) page = (page + pageCount - 1) % pageCount;
+    if (ui::AnimatedButton(layout.Rect({600,509,60,38}), ">")) page = (page + 1) % pageCount;
+    DrawCenteredText(font, TextFormat("%d / %d",page+1,pageCount),550,12,config::mutedColor,layout);
     constexpr float gridWidth = selection::columns * selection::cardWidth +
                                (selection::columns - 1) * selection::cardGap;
     for (int index = 0; index < selection::cardCount; ++index) {
+        const int entryIndex = page * selection::cardCount + index;
+        if (entryIndex >= static_cast<int>(entries.size())) break;
         const Rectangle card{(config::designWidth - gridWidth) / 2 +
             (index % selection::columns) * (selection::cardWidth + selection::cardGap),
             selection::cardsY + (index / selection::columns) * (selection::cardHeight + selection::rowGap),
             selection::cardWidth, selection::cardHeight};
-        if (DrawCard(entries[index], card, font, labels.play, layout)) return {entries[index].action};
+        if (DrawCard(entries[entryIndex], card, font, labels.play, layout)) return {entries[entryIndex].action};
     }
-    if (GuiButton(layout.Rect(selection::backButton), text::ForLanguage(language).back)) {
+    if (ui::AnimatedButton(layout.Rect(selection::backButton), text::ForLanguage(language).back)) {
         return {MenuAction::Back};
     }
     return {};

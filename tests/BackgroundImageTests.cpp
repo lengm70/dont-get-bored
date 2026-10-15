@@ -60,7 +60,9 @@ int main(int argc, char** argv) {
         Require(drawnId == oldId, "Failed replacement preserves current texture");
         Require(ui::ImportBackgroundImage(valid, original), "Valid import replaces original");
         ui::DrawBackgroundImage(960, 600);
-        Require(drawnId != oldId && unloadedId == oldId, "Successful import swaps textures");
+        Require(drawnId != oldId, "Successful import selects new texture");
+        for(int frame=0;frame<4;++frame) ui::UpdateBackgroundAnimation(.1f);
+        Require(unloadedId==oldId, "Old texture released after crossfade");
         Require(Read(original) == "valid", "Imported file is persisted");
         for (const auto& entry : std::filesystem::directory_iterator(directory)) {
             Require(entry.path().filename().string().find("import-") != 0, "Staging files are cleaned up");

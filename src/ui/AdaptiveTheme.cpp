@@ -1,4 +1,5 @@
 #include "ui/AdaptiveTheme.h"
+#include "ui/Motion.h"
 
 #include <algorithm>
 #include <array>
@@ -6,6 +7,8 @@
 
 namespace ui {
 namespace {
+std::array<float,72> themeChannels{};
+bool themeChannelsReady=false;
 constexpr int sampleSize = 64;
 constexpr int hueBins = 24;
 constexpr float minSaturation = 0.20f;
@@ -95,7 +98,33 @@ void UpdateThemeFromBackground(Texture2D texture) {
         UnloadImageColors(pixels);
         UnloadImage(image);
     }
-    palette::current = colors;
+    themeChannelsReady=false;
+    palette::target=colors;
+    if(palette::revision==0) palette::current=colors;
     ++palette::revision;
+}
+
+void UpdateThemeAnimation(float seconds) {
+    if(!std::isfinite(seconds) || seconds<=0) return;
+    constexpr std::array<Color palette::Colors::*,18> members{&palette::Colors::text,&palette::Colors::muted,&palette::Colors::accent,&palette::Colors::gradientTop,&palette::Colors::gradientBottom,&palette::Colors::panel,&palette::Colors::border,&palette::Colors::control,&palette::Colors::focused,&palette::Colors::pressed,&palette::Colors::card,&palette::Colors::cardFocused,&palette::Colors::cardPressed,&palette::Colors::cardBorder,&palette::Colors::shadow,&palette::Colors::board,&palette::Colors::grid,&palette::Colors::overlay};
+    if(!themeChannelsReady) {
+        std::size_t index=0;
+        for(const auto member:members) {const auto value=palette::current.*member;
+            for(const auto channel:{value.r,value.g,value.b,value.a}) themeChannels[index++]=channel;}
+        themeChannelsReady=true;
+    }
+    bool changed=false; std::size_t index=0;
+    for(const auto member:members) {
+        auto& value=palette::current.*member; const auto target=palette::target.*member;
+        const auto channel=[&](unsigned char from,unsigned char to) {
+            auto& value=themeChannels[index++];
+            value=motion::Smooth(value,to,animationConfig::themeRate,seconds);
+            if(std::abs(value-to)<.35f) value=to;
+            const auto next=static_cast<unsigned char>(std::lround(value));
+            changed|=next!=from;return next;
+        };
+        value={channel(value.r,target.r),channel(value.g,target.g),channel(value.b,target.b),channel(value.a,target.a)};
+    }
+    if(changed) ++palette::revision;
 }
 }  // namespace ui

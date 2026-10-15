@@ -230,7 +230,7 @@ void TestBreakout() {
 
     // Follow the ball with varying hit offsets to clear the complete board.
     game.Reset();
-    for (int frame = 0; frame < 180000 && game.State() != breakout::Status::Won; ++frame) {
+    for (int frame = 0; frame < 180000 && game.State() != breakout::Status::LevelComplete; ++frame) {
         if (game.State() == breakout::Status::Ready) game.Start();
         Require(game.State() != breakout::Status::GameOver, "Autoplay exhausted lives");
         const float aimOffset = 24.0f * std::sin(frame / 300.0f);
@@ -241,9 +241,9 @@ void TestBreakout() {
         Require(std::isfinite(game.Ball().x) && std::isfinite(game.Ball().y),
                 "Physics remains finite");
     }
-    Require(game.State() == breakout::Status::Won &&
-            game.Score() == breakout::rules::brickCount * breakout::rules::pointsPerBrick,
-            "Clearing all bricks wins with the correct score");
+    Require(game.State() == breakout::Status::LevelComplete &&
+            game.Score() >= breakout::rules::brickCount * breakout::rules::pointsPerBrick + game.CompletionBonus(),
+            "Clearing a sector awards combo points and a lives bonus");
 
     breakout::BreakoutGame lowFps, highFps;
     lowFps.Start();

@@ -1,14 +1,29 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(dont_get_bored VERSION 0.2.4 LANGUAGES CXX)
+project(dont_get_bored VERSION 0.3.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(DONT_GET_BORED_RELEASE_VERSION "0.2.4")
+set(DONT_GET_BORED_RELEASE_VERSION "0.3.0")
 
 find_package(raylib CONFIG REQUIRED)
 find_package(Threads REQUIRED)
 
+add_library(bomber_logic STATIC
+    src/games/bomber/BomberPowerUps.cpp
+    src/games/bomber/BomberMap.cpp
+    src/games/bomber/BomberExplosion.cpp
+    src/games/bomber/BomberMatch.cpp
+    src/games/bomber/BomberAI.cpp
+    src/games/bomber/BomberGame.cpp
+    src/games/bomber/BomberMovement.cpp)
+target_include_directories(bomber_logic PUBLIC src)
+
 add_executable(dont_get_bored
+    src/games/twentyone/TwentyOneMatch.cpp
+    src/games/twentyone/TwentyOneEconomy.cpp
+    src/games/twentyone/TwentyOne.c
+    src/games/twentyone/PlayingCardArt.cpp
+    src/games/twentyone/TwentyOneScreen.cpp
     src/main.cpp
     src/app/Application.cpp
     src/app/MediaController.cpp
@@ -26,8 +41,15 @@ add_executable(dont_get_bored
     src/games/snake/SnakeScreen.cpp
     src/games/tetris/TetrisGame.cpp
     src/games/tetris/TetrisScreen.cpp
+    src/games/breakout/BreakoutPhysics.cpp
+    src/games/breakout/BreakoutLevels.cpp
+    src/games/breakout/BreakoutPowerUps.cpp
+    src/games/breakout/BreakoutProgress.cpp
     src/games/breakout/BreakoutGame.cpp
     src/games/breakout/BreakoutCollision.cpp
+    src/games/bomber/BomberVisual.cpp
+    src/games/bomber/BomberScreen.cpp
+    src/games/breakout/BreakoutVisual.cpp
     src/games/breakout/BreakoutScreen.cpp
     src/games/minesweeper/MinesweeperGame.cpp
     src/games/minesweeper/MinesweeperScreen.cpp
@@ -43,13 +65,14 @@ add_executable(dont_get_bored
     src/ui/MenuView.cpp
     src/ui/GameSelectionView.cpp
     src/ui/GameIllustration.cpp
+    src/ui/AnimatedControls.cpp
     src/ui/Theme.cpp
     src/ui/raygui_impl.cpp
     src/platform/MusicFileDialog.cpp
 )
-target_compile_features(dont_get_bored PRIVATE cxx_std_17)
+target_compile_features(dont_get_bored PRIVATE c_std_11 cxx_std_17)
 target_include_directories(dont_get_bored PRIVATE src external)
-target_link_libraries(dont_get_bored PRIVATE raylib Threads::Threads)
+target_link_libraries(dont_get_bored PRIVATE raylib Threads::Threads bomber_logic)
 add_custom_command(TARGET dont_get_bored POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_CURRENT_SOURCE_DIR}/assets" "$<TARGET_FILE_DIR:dont_get_bored>/assets")
@@ -68,6 +91,25 @@ endif()
 option(BUILD_TESTING "Build game logic tests" OFF)
 include(CTest)
 if(BUILD_TESTING)
+    add_executable(bomber_tests tests/BomberTests.cpp src/config/HighScores.cpp)
+    target_link_libraries(bomber_tests PRIVATE bomber_logic)
+    add_test(NAME bomber_tests COMMAND bomber_tests "${CMAKE_CURRENT_BINARY_DIR}/bomber-test-data")
+    add_executable(breakout_campaign_tests tests/BreakoutCampaignTests.cpp
+        src/games/breakout/BreakoutGame.cpp src/games/breakout/BreakoutPhysics.cpp
+        src/games/breakout/BreakoutCollision.cpp src/games/breakout/BreakoutLevels.cpp
+        src/games/breakout/BreakoutPowerUps.cpp src/games/breakout/BreakoutProgress.cpp)
+    target_include_directories(breakout_campaign_tests PRIVATE src)
+    add_test(NAME breakout_campaign_tests COMMAND breakout_campaign_tests "${CMAKE_CURRENT_BINARY_DIR}/breakout-test-data/progress.ini")
+    add_executable(motion_tests tests/MotionTests.cpp src/games/twentyone/TwentyOneMatch.cpp src/games/twentyone/TwentyOneEconomy.cpp src/games/twentyone/TwentyOne.c)
+    target_include_directories(motion_tests PRIVATE src)
+    add_test(NAME motion_tests COMMAND motion_tests)
+    add_executable(twenty_one_match_tests tests/TwentyOneMatchTests.cpp src/games/twentyone/TwentyOneMatch.cpp src/games/twentyone/TwentyOneEconomy.cpp src/games/twentyone/TwentyOne.c)
+    target_include_directories(twenty_one_match_tests PRIVATE src)
+    add_test(NAME twenty_one_match_tests COMMAND twenty_one_match_tests)
+    add_executable(twenty_one_tests tests/TwentyOneTests.c src/games/twentyone/TwentyOne.c)
+    target_include_directories(twenty_one_tests PRIVATE src)
+    target_compile_features(twenty_one_tests PRIVATE c_std_11)
+    add_test(NAME twenty_one_tests COMMAND twenty_one_tests)
     add_executable(fruit_tests tests/FruitTests.cpp src/games/fruit/FruitPhysics.cpp src/games/fruit/FruitGame.cpp src/config/HighScores.cpp)
     target_include_directories(fruit_tests PRIVATE src)
     add_test(NAME fruit_tests COMMAND fruit_tests "${CMAKE_CURRENT_BINARY_DIR}/fruit-test-data")
@@ -90,6 +132,10 @@ if(BUILD_TESTING)
         tests/GameLogicTests.cpp
         src/config/AppSettings.cpp
         src/config/HighScores.cpp
+        src/games/breakout/BreakoutPhysics.cpp
+        src/games/breakout/BreakoutLevels.cpp
+        src/games/breakout/BreakoutPowerUps.cpp
+        src/games/breakout/BreakoutProgress.cpp
         src/games/breakout/BreakoutGame.cpp
         src/games/breakout/BreakoutCollision.cpp
         src/games/minesweeper/MinesweeperGame.cpp
@@ -109,8 +155,15 @@ if(BUILD_TESTING)
         src/games/gomoku/GomokuAI.cpp
         src/games/gomoku/GomokuAiTurn.cpp
         src/games/gomoku/GomokuScreen.cpp
+        src/games/breakout/BreakoutPhysics.cpp
+        src/games/breakout/BreakoutLevels.cpp
+        src/games/breakout/BreakoutPowerUps.cpp
+        src/games/breakout/BreakoutProgress.cpp
         src/games/breakout/BreakoutGame.cpp
         src/games/breakout/BreakoutCollision.cpp
+        src/games/bomber/BomberVisual.cpp
+        src/games/bomber/BomberScreen.cpp
+        src/games/breakout/BreakoutVisual.cpp
         src/games/breakout/BreakoutScreen.cpp
         src/games/minesweeper/MinesweeperGame.cpp
         src/games/minesweeper/MinesweeperScreen.cpp
@@ -118,6 +171,7 @@ if(BUILD_TESTING)
         src/games/snake/SnakeScreen.cpp
         src/games/tetris/TetrisGame.cpp
         src/games/tetris/TetrisScreen.cpp
+        src/ui/AnimatedControls.cpp
         src/ui/Theme.cpp
         src/ui/BackgroundImage.cpp
         src/ui/AdaptiveTheme.cpp
@@ -126,7 +180,7 @@ if(BUILD_TESTING)
     )
     target_compile_features(game_input_tests PRIVATE cxx_std_17)
     target_include_directories(game_input_tests PRIVATE src external)
-    target_link_libraries(game_input_tests PRIVATE raylib Threads::Threads)
+    target_link_libraries(game_input_tests PRIVATE raylib Threads::Threads bomber_logic)
     # Rename substituted queries so tests also link against static raylib builds.
     target_compile_definitions(game_input_tests PRIVATE
         IsKeyPressed=TestIsKeyPressed IsKeyDown=TestIsKeyDown

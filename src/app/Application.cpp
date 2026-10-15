@@ -1,4 +1,7 @@
+#include "ui/AnimatedControls.h"
+#include "ui/Motion.h"
 #include "app/Application.h"
+#include "games/bomber/BomberScreen.h"
 
 #include <algorithm>
 #include <filesystem>
@@ -8,6 +11,7 @@
 #include "raygui.h"
 #include "audio/BackgroundMusic.h"
 #include "app/Screen.h"
+#include "games/twentyone/TwentyOneScreen.h"
 #include "app/MediaController.h"
 #include "ui/MediaLibraryView.h"
 #include "ui/PlayerBackground.h"
@@ -67,19 +71,31 @@ int Run() {
     ui::ConfigureGuiStyle(font, ui::CurrentLayout().scale);
 
     unsigned themeRevision = ui::palette::revision;
+    games::twentyone::LoadAssets();
     Screen screen = Screen::MainMenu;
+    games::bomber::BomberGame bomber;
+    games::bomber::ViewState bomberView;
     games::fruit::FruitGame fruit;
     games::snake::SnakeGame snake;
     games::tetris::TetrisGame tetris;
     games::breakout::BreakoutGame breakout;
+    games::breakout::Progress breakoutProgress;
+    if (!games::breakout::LoadProgress(breakoutProgress) && !games::breakout::SaveProgress(breakoutProgress))
+        TraceLog(LOG_WARNING, "Could not create Breakout progress file");
+    bool breakoutProgressDirty = false;
     games::minesweeper::MinesweeperGame minesweeper;
     games::minesweeper::SetupOptions minesweeperOptions;
     games::gomoku::GomokuGame gomoku;
     games::gomoku::GomokuAiTurn gomokuAi;
     games::gomoku::SetupOptions gomokuOptions;
+    games::twentyone::ScreenData twentyOne;
+    Screen visualScreen=screen; float pageProgress=1;
     bool running = true;
 
     while (running && !WindowShouldClose()) {
+        ui::BeginUiAnimations(GetFrameTime());
+        if(visualScreen!=screen) {visualScreen=screen;pageProgress=0;}
+        pageProgress=ui::motion::Advance(pageProgress,ui::animationConfig::pageDuration,GetFrameTime());
         if (themeRevision != ui::palette::revision) {
             ui::ConfigureGuiStyle(font, ui::CurrentLayout().scale);
             themeRevision = ui::palette::revision;
@@ -93,7 +109,7 @@ int Run() {
             else if (screen == Screen::Fruit || screen == Screen::Snake || screen == Screen::Tetris ||
                      screen == Screen::Breakout || screen == Screen::Minesweeper ||
                      screen == Screen::MinesweeperSetup || screen == Screen::Gomoku ||
-                     screen == Screen::GomokuSetup) {
+                     screen == Screen::GomokuSetup || screen == Screen::TwentyOne || screen == Screen::Bomber) {
                 screen = Screen::GameSelection;
             }
             else screen = Screen::MainMenu;
@@ -101,7 +117,13 @@ int Run() {
 
         const HighScores previousScores = highScores;
         const bool mouseCaptured = ui::UpdateMusicPlayerInput();
-        if (screen == Screen::Fruit) {
+        if (screen == Screen::Bomber) {
+            games::bomber::UpdateFromInput(bomber, bomberView, GetFrameTime());
+            if (!bomberView.setup && bomber.Progress().Settings().mode == games::bomber::Mode::Solo)
+                highScores.bomber = std::max(highScores.bomber, bomber.Score());
+        } else if (screen == Screen::TwentyOne) {
+            games::twentyone::UpdateRound(twentyOne, GetFrameTime());
+        } else if (screen == Screen::Fruit) {
             games::fruit::UpdateFromInput(fruit, GetFrameTime(), mouseCaptured);
             highScores.fruit = std::max(highScores.fruit, fruit.Score());
         } else if (screen == Screen::Snake) {
@@ -111,7 +133,14 @@ int Run() {
             games::tetris::UpdateFromInput(tetris, GetFrameTime());
             highScores.tetris = std::max(highScores.tetris, tetris.Score());
         } else if (screen == Screen::Breakout) {
-            games::breakout::UpdateFromInput(breakout, GetFrameTime());
+            games::breakout::UpdateFromInput(breakout, GetFrameTime(), mouseCaptured, &breakoutProgress);
+            if (IsKeyPressed(KEY_S)) {
+                breakoutProgress.screenShake = !breakoutProgress.screenShake;
+                breakoutProgressDirty = true;
+            }
+            breakoutProgressDirty |= games::breakout::RecordProgress(breakoutProgress, breakout);
+            if (breakoutProgressDirty && games::breakout::SaveProgress(breakoutProgress))
+                breakoutProgressDirty = false;
             highScores.breakout = std::max(highScores.breakout, breakout.Score());
         } else if (screen == Screen::Minesweeper) {
             games::minesweeper::UpdateFromInput(minesweeper, GetFrameTime(), mouseCaptured);
@@ -124,7 +153,7 @@ int Run() {
             games::gomoku::UpdateFromInput(gomoku, gomokuAi,
                 static_cast<games::gomoku::Strength>(gomokuOptions.strength), mouseCaptured);
         }
-        const bool recordsChanged = highScores.fruit != previousScores.fruit || highScores.snake != previousScores.snake ||
+        const bool recordsChanged = highScores.bomber != previousScores.bomber || highScores.fruit != previousScores.fruit || highScores.snake != previousScores.snake ||
             highScores.tetris != previousScores.tetris ||
             highScores.breakout != previousScores.breakout ||
             highScores.minesweeperEasyMilliseconds != previousScores.minesweeperEasyMilliseconds ||
@@ -138,7 +167,9 @@ int Run() {
         ui::MenuResult result;
         const bool guiWasLocked = GuiIsLocked();
         if (mouseCaptured) GuiLock();
-        if (screen == Screen::Fruit) {
+        if (screen == Screen::Bomber) {
+            games::bomber::DrawScreen(bomber, bomberView, font, settings.language, highScores.bomber);
+        } else if (screen == Screen::Fruit) {
             games::fruit::DrawScreen(fruit, font, settings.language, highScores.fruit);
         } else if (screen == Screen::Snake) {
             games::snake::DrawScreen(snake, font, settings.language, highScores.snake);
@@ -146,10 +177,12 @@ int Run() {
             games::tetris::DrawScreen(tetris, font, settings.language,
                                       highScores.tetris);
         } else if (screen == Screen::Breakout) {
-            games::breakout::DrawScreen(breakout, font, settings.language, highScores.breakout);
+            games::breakout::DrawScreen(breakout, font, settings.language, highScores.breakout, &breakoutProgress);
         } else if (screen == Screen::Minesweeper) {
             games::minesweeper::DrawScreen(minesweeper, font, settings.language,
                                           MinesweeperBest(highScores, minesweeper.Level()));
+        } else if (screen == Screen::TwentyOne) {
+            result = games::twentyone::DrawScreen(twentyOne, font, settings.language);
         } else if (screen == Screen::MinesweeperSetup) {
             result = games::minesweeper::DrawSetup(font, settings.language, minesweeperOptions, highScores);
         } else if (screen == Screen::Gomoku) {
@@ -162,6 +195,7 @@ int Run() {
             result = ui::DrawMenu(screen, font, settings);
         }
         if (!guiWasLocked) GuiUnlock();
+        if(pageProgress<1) DrawRectangle(0,0,GetScreenWidth(),GetScreenHeight(),Fade(ui::palette::board,(1-ui::motion::Ease(pageProgress))*.9f));
         const ui::MenuResult player = ui::DrawMusicPlayer(font, settings);
         if (player.action != ui::MenuAction::None) result.action = player.action;
         result.settingsChanged |= player.settingsChanged;
@@ -232,8 +266,18 @@ int Run() {
             case ui::MenuAction::UseMedia:
                 mediaView.failed = !mediaController.Select(static_cast<media::Kind>(mediaView.category), mediaView.selected);
                 break;
+            case ui::MenuAction::StartBomber:
+                bomber.Reset(bomberView.options);
+                bomberView.setup = true;
+                bomberView.held = {};
+                screen = Screen::Bomber;
+                break;
             case ui::MenuAction::StartFruit:
                 fruit.Reset(); screen = Screen::Fruit; break;
+            case ui::MenuAction::StartTwentyOne:
+                games::twentyone::StartRound(twentyOne);
+                screen = Screen::TwentyOne;
+                break;
             case ui::MenuAction::StartSnake:
                 snake.Reset();
                 screen = Screen::Snake;
@@ -283,6 +327,7 @@ int Run() {
     }
 
     gomokuAi.Cancel();
+    games::twentyone::UnloadAssets();
     ui::UnloadPlayerBackground();
     ui::UnloadBackgroundImage();
     UnloadFont(font);

@@ -1,3 +1,4 @@
+#include "ui/AnimatedControls.h"
 #include "games/minesweeper/MinesweeperSetup.h"
 
 #include <array>
@@ -21,7 +22,7 @@ ui::MenuResult DrawSetup(Font font, app::Language language, SetupOptions& option
         config::setupTitleY, config::titleSize, ui::config::textColor, layout);
     ui::DrawCenteredText(font, text.choose, config::setupSubtitleY, config::setupTextSize,
         ui::config::mutedColor, layout);
-    if (GuiComboBox(layout.Rect(config::setupSelector), text.choices, &options.selected)) {
+    if (ui::AnimatedComboBox(layout.Rect(config::setupSelector), text.choices, &options.selected)) {
         options.editColumns = options.editRows = options.editMines = false;
     }
     const auto level = static_cast<Difficulty>(options.selected);
@@ -39,7 +40,7 @@ ui::MenuResult DrawSetup(Font font, app::Language language, SetupOptions& option
             const auto& row = rows[index];
             ui::DrawScaledText(font, row.label, config::setupLabelX, y + config::setupLabelOffset,
                 config::setupTextSize, ui::config::textColor, layout);
-            if (GuiSpinner(layout.Rect({config::setupControlX, y, config::setupControlWidth, config::setupControlHeight}), nullptr,
+            if (ui::AnimatedSpinner(layout.Rect({config::setupControlX, y, config::setupControlWidth, config::setupControlHeight}), nullptr,
                            row.value, row.minimum, row.maximum, *row.editing)) {
                 *row.editing = !*row.editing;
             }
@@ -69,10 +70,10 @@ ui::MenuResult DrawSetup(Font font, app::Language language, SetupOptions& option
     const bool allowStart = valid && !editing;
     const int previousState = GuiGetState();
     if (!allowStart) GuiDisable();
-    const bool start = GuiButton(layout.Rect(config::setupStart), text.start);
+    const bool start = ui::AnimatedButton(layout.Rect(config::setupStart), text.start);
     GuiSetState(previousState);
     if (allowStart && (start || IsKeyPressed(KEY_SPACE))) return {ui::MenuAction::LaunchMinesweeper};
-    if (GuiButton(layout.Rect(config::setupBack), ui::text::ForLanguage(language).back)) {
+    if (ui::AnimatedButton(layout.Rect(config::setupBack), ui::text::ForLanguage(language).back)) {
         return {ui::MenuAction::Back};
     }
     return {};

@@ -1,2 +1,29 @@
 1 ICON "@CMAKE_CURRENT_SOURCE_DIR@/assets/icons/app.ico"
 GLFW_ICON ICON "@CMAKE_CURRENT_SOURCE_DIR@/assets/icons/app.ico"
+
+1 VERSIONINFO
+FILEVERSION @PROJECT_VERSION_MAJOR@,@PROJECT_VERSION_MINOR@,@PROJECT_VERSION_PATCH@,0
+PRODUCTVERSION @PROJECT_VERSION_MAJOR@,@PROJECT_VERSION_MINOR@,@PROJECT_VERSION_PATCH@,0
+FILEFLAGSMASK 0x3fL
+FILEFLAGS 0x0L
+FILEOS 0x40004L
+FILETYPE 0x1L
+FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "FileDescription", "don't get bored - Mini Game Collection"
+            VALUE "FileVersion", "@DONT_GET_BORED_RELEASE_VERSION@"
+            VALUE "InternalName", "dont_get_bored"
+            VALUE "OriginalFilename", "dont_get_bored.exe"
+            VALUE "ProductName", "don't get bored"
+            VALUE "ProductVersion", "@DONT_GET_BORED_RELEASE_VERSION@"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
