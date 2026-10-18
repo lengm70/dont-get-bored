@@ -1,3 +1,7 @@
+# v0.8.0 — Records & Goals
+
+The main menu now has Records & Goals: a two-page dashboard for all 12 games, individual goals, compatible best scores/times, completed Sokoban puzzles, finished rhythm songs and race circuits. Click a row to launch that game. Existing high scores and Breakout records are read in place; new completions for Gomoku, Twenty One and Bomber are saved in config/progress.ini without rewriting old game data. Goals are local milestones, not global leaderboards.
+
 # v0.7.0 — Space Race
 
 All twelve games are now present. Space Race has three distinct circuits and three-lap time trials, acceleration, braking, inertia and handbrake drift. Up/W accelerates, Down/S brakes, Left/Right (A/D) steers, Space drifts after starting. Left/Right selects a track on Ready. Ordered forward checkpoints prevent skipping laps; off-track travel slows the ship. Best total and best single lap are saved separately for each circuit. Time limit: three minutes.

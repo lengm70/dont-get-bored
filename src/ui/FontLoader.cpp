@@ -1,4 +1,5 @@
 #include "ui/FontLoader.h"
+#include "ui/ProgressView.h"
 #include "games/race/RaceScreen.h"
 #include "games/rhythm/RhythmScreen.h"
 #include "games/sokoban/SokobanScreen.h"
@@ -47,6 +48,8 @@ Font LoadMenuFont(const std::vector<std::string>& additionalText) {
     collect(games::sokoban::glyphs);
     collect(games::rhythm::glyphs);
     collect(games::race::glyphs);
+    collect(ui::progressGlyphs);
+    collect("获得100分 完成全部5关 完成全部20关 完成全部三首曲目 完成三条赛道 俄罗斯方块 合成大西瓜 二十一点");
     collect(text::title);
     collect("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
     for (const auto* labels : {&games::twentyone::chinese, &games::twentyone::english}) {

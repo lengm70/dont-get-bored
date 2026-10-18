@@ -1,6 +1,7 @@
 #include "ui/AnimatedControls.h"
 #include "ui/Motion.h"
 #include "app/Application.h"
+#include "ui/ProgressView.h"
 #include "games/race/RaceScreen.h"
 #include "games/rhythm/RhythmScreen.h"
 #include "games/sokoban/SokobanScreen.h"
@@ -142,6 +143,7 @@ int Run() {
             games::bomber::UpdateFromInput(bomber, bomberView, GetFrameTime());
             if (!bomberView.setup && bomber.Progress().Settings().mode == games::bomber::Mode::Solo)
                 highScores.bomber = std::max(highScores.bomber, bomber.Score());
+            if(bomber.State()==games::bomber::Status::Won)progressRecords.Best("bomber.clear",1);
         } else if (screen == Screen::TwentyOne) {
             games::twentyone::UpdateRound(twentyOne, GetFrameTime());
         } else if (screen == Screen::Fruit) {
@@ -184,12 +186,19 @@ int Run() {
             TraceLog(LOG_WARNING, "Could not save high scores: %s", highScoresPath);
         }
 
+        if(screen==Screen::Gomoku&&gomoku.State()==games::gomoku::Status::Won)progressRecords.Best("gomoku.clear",1);
+        if(screen==Screen::TwentyOne&&twentyOne.match.Phase()==games::twentyone::MatchPhase::Finished){
+            progressRecords.Best("twentyone.clear",1);
+            for(const auto& seat:twentyOne.match.Seats())if(!seat.ai)progressRecords.Best("twentyone.funds",int(std::min<games::twentyone::Money>(seat.funds,2147483647)));
+        }
         if(progressRecords.Dirty()&&!progressRecords.Save()) TraceLog(LOG_WARNING,"Could not save game progress");
         BeginDrawing();
         ui::MenuResult result;
         const bool guiWasLocked = GuiIsLocked();
         if (mouseCaptured) GuiLock();
-        if (screen == Screen::Race) {
+        if (screen == Screen::Progress) {
+            result=ui::DrawProgress(font,settings.language,highScores,progressRecords,breakoutProgress);
+        } else if (screen == Screen::Race) {
             games::race::DrawScreen(race,font,settings.language,progressRecords);
         } else if (screen == Screen::Rhythm) {
             games::rhythm::DrawScreen(rhythm,rhythmView,font,settings.language,progressRecords);
@@ -253,6 +262,7 @@ int Run() {
         }
 
         switch (result.action) {
+            case ui::MenuAction::OpenProgress: screen=Screen::Progress;break;
             case ui::MenuAction::OpenGameSelection: screen = Screen::GameSelection; break;
             case ui::MenuAction::OpenSettings: screen = Screen::Settings; break;
             case ui::MenuAction::OpenMusicSettings: screen = Screen::MusicSettings; break;

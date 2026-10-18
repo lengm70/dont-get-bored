@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <array>
 #include <cstdio>
+#include <string>
 
 #include "raygui.h"
 #include "config/UiConfig.h"
@@ -42,7 +43,7 @@ Rectangle SettingsControl(int row, const UiLayout& layout) {
         static_cast<float>(config::settingsControlHeight)});
 }
 
-MenuResult DrawMainMenu(Font font, const text::Labels& labels, const UiLayout& layout) {
+MenuResult DrawMainMenu(Font font, const text::Labels& labels, const UiLayout& layout, app::Language language) {
     DrawCenteredText(font, text::title, config::titleY, config::titleSize,
                      config::textColor, layout);
     DrawCenteredText(font, labels.subtitle, config::subtitleY, config::subtitleSize,
@@ -57,6 +58,8 @@ MenuResult DrawMainMenu(Font font, const text::Labels& labels, const UiLayout& l
                                  config::mainButtonWidth, layout), labels.quit)) {
         return {MenuAction::Quit};
     }
+    if (ui::AnimatedButton(CenteredButton(config::mainButtonY + 3 * config::mainButtonGap,
+        config::mainButtonWidth, layout), language==app::Language::English?"Records & Goals":"成绩与目标")) return {MenuAction::OpenProgress};
     return {};
 }
 
@@ -144,7 +147,7 @@ MenuResult DrawMenu(app::Screen screen, Font font, app::Settings& settings) {
     if (screen == app::Screen::GameSelection) DrawBackground(layout, false, selection::panel);
     else DrawBackground(layout);
     switch (screen) {
-        case app::Screen::MainMenu: return DrawMainMenu(font, labels, layout);
+        case app::Screen::MainMenu: return DrawMainMenu(font, labels, layout, settings.language);
         case app::Screen::GameSelection:
             return DrawGameSelection(font, settings.language, layout);
         case app::Screen::Settings: return DrawSettings(font, settings, labels, layout);

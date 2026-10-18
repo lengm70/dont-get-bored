@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(dont_get_bored VERSION 0.7.0 LANGUAGES C CXX)
+project(dont_get_bored VERSION 0.8.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(DONT_GET_BORED_RELEASE_VERSION "0.7.0")
+set(DONT_GET_BORED_RELEASE_VERSION "0.8.0")
 
 find_package(raylib CONFIG REQUIRED)
 find_package(Threads REQUIRED)
@@ -36,6 +36,7 @@ add_executable(dont_get_bored
     src/audio/BackgroundMusic.cpp
     src/config/AppSettings.cpp
     src/config/HighScores.cpp
+    src/config/CollectionProgress.cpp
     src/games/fruit/FruitGame.cpp
     src/games/fruit/FruitPhysics.cpp
     src/games/snake/SnakeGame.cpp
@@ -70,6 +71,7 @@ add_executable(dont_get_bored
     src/ui/BackgroundImage.cpp
     src/ui/AdaptiveTheme.cpp
     src/ui/WindowIcon.cpp
+    src/ui/ProgressView.cpp
     src/ui/MenuView.cpp
     src/ui/GameSelectionView.cpp
     src/ui/GameIllustration.cpp
@@ -99,6 +101,9 @@ endif()
 option(BUILD_TESTING "Build game logic tests" OFF)
 include(CTest)
 if(BUILD_TESTING)
+    add_executable(collection_tests tests/CollectionTests.cpp src/config/CollectionProgress.cpp)
+    target_link_libraries(collection_tests PRIVATE arcade_logic)
+    add_test(NAME collection_tests COMMAND collection_tests)
     add_executable(race_tests tests/RaceTests.cpp)
     target_link_libraries(race_tests PRIVATE arcade_logic)
     add_test(NAME race_tests COMMAND race_tests)
