@@ -104,7 +104,7 @@ void DrawScreen(const RaceGame &g, Font font, app::Language lang, const app::Pro
     Vector2 tip = arcade::Point(p.x + c * 13, p.y + s * 13, l),
             left = arcade::Point(p.x - c * 8 - s * 8, p.y - s * 8 + c * 8, l),
             right = arcade::Point(p.x - c * 8 + s * 8, p.y - s * 8 - c * 8, l);
-    DrawTriangle(tip, left, right, g.Road() ? cyan : pink);
+    DrawTriangle(tip, right, left, g.Road() ? cyan : pink);
     DrawTriangleLines(tip, left, right, WHITE);
     Overlay(static_cast<arcade::Status>(g.State()), font, lang, l,
             g.State() == Status::Ready ? (zh ? "左右选赛道；按顺序通过检查点"

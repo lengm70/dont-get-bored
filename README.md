@@ -1,3 +1,16 @@
+# v0.9.0 — Pre-1.0 integration release
+
+Twelve games. This release stops before the planned v1.0 redesign.
+
+- **F1**: game-specific controls overlay; gameplay and rhythm audio pause while help is open. F1 or Esc closes help.
+- **P**: consistent application-level pause across all twelve games. Returning from focus loss requires an explicit P resume.
+- **R**: restart, including from the pause/help overlay. Esc returns to selection; if help is open, the first Esc closes help.
+- Original saves remain compatible; the four added games and collection milestones use config/progress.ini.
+- Includes the Tank Battle (0.4), Sokoban (0.5), Rhythm (0.6), Space Race (0.7) and Records & Goals (0.8) releases.
+- Added code remains split into rules, pure models, data and presentation modules, with consistent formatting.
+
+See [the roadmap](docs/ROADMAP.md) and [verification scope](docs/PRE_1_0_CHECKS.md). Every release includes a complete portable Windows x64 ZIP (recommended), the EXE, source ZIP and SHA-256 hashes. Keep the ZIP's assets and DLLs beside the EXE.
+
 # v0.8.0 — Records & Goals
 
 The main menu now has Records & Goals: a two-page dashboard for all 12 games, individual goals, compatible best scores/times, completed Sokoban puzzles, finished rhythm songs and race circuits. Click a row to launch that game. Existing high scores and Breakout records are read in place; new completions for Gomoku, Twenty One and Bomber are saved in config/progress.ini without rewriting old game data. Goals are local milestones, not global leaderboards.

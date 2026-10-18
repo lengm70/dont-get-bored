@@ -1,4 +1,5 @@
 #include "ui/FontLoader.h"
+#include "ui/SessionOverlay.h"
 #include "ui/ProgressView.h"
 #include "games/race/RaceScreen.h"
 #include "games/rhythm/RhythmScreen.h"
@@ -50,6 +51,10 @@ Font LoadMenuFont(const std::vector<std::string>& additionalText) {
     collect(games::race::glyphs);
     collect(ui::progressGlyphs);
     collect("获得100分 完成全部5关 完成全部20关 完成全部三首曲目 完成三条赛道 俄罗斯方块 合成大西瓜 二十一点");
+    collect(ui::sessionGlyphs);
+    for(auto screen:{app::Screen::Snake,app::Screen::Tetris,app::Screen::Breakout,app::Screen::Minesweeper,app::Screen::Gomoku,app::Screen::Fruit,app::Screen::TwentyOne,app::Screen::Bomber,app::Screen::Tank,app::Screen::Sokoban,app::Screen::Rhythm,app::Screen::Race}){
+        auto help=ui::GameHelp(screen,app::Language::Chinese);collect(help.goal);collect(help.first);collect(help.second);
+    }
     collect(text::title);
     collect("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
     for (const auto* labels : {&games::twentyone::chinese, &games::twentyone::english}) {

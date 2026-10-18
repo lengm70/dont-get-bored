@@ -1,6 +1,8 @@
 #include "ui/AnimatedControls.h"
 #include "ui/Motion.h"
 #include "app/Application.h"
+#include "app/SessionGuard.h"
+#include "ui/SessionOverlay.h"
 #include "ui/ProgressView.h"
 #include "games/race/RaceScreen.h"
 #include "games/rhythm/RhythmScreen.h"
@@ -102,6 +104,7 @@ int Run() {
     games::twentyone::ScreenData twentyOne;
     Screen visualScreen=screen; float pageProgress=1;
     bool running = true;
+    app::SessionGuard sessionGuard;
 
     while (running && !WindowShouldClose()) {
         ui::BeginUiAnimations(GetFrameTime());
@@ -114,7 +117,8 @@ int Run() {
         backgroundMusic.Update();
         const Settings previous = settings;
         if (IsKeyPressed(KEY_F9)) settings.resolution = Resolution::P720;
-        if (IsKeyPressed(KEY_ESCAPE)) {
+        const bool closedHelp=IsKeyPressed(KEY_ESCAPE)&&sessionGuard.CloseHelp();
+        if (IsKeyPressed(KEY_ESCAPE)&&!closedHelp) {
             gomokuAi.Cancel();
             if (screen == Screen::MainMenu) running = false;
             else if (screen == Screen::Fruit || screen == Screen::Snake || screen == Screen::Tetris ||
@@ -128,8 +132,14 @@ int Run() {
 
         const HighScores previousScores = highScores;
         const bool mouseCaptured = ui::UpdateMusicPlayerInput();
+        const bool wasBlocked=sessionGuard.Blocked();
+        bool consumed=sessionGuard.Update(screen,IsWindowFocused(),IsKeyPressed(KEY_P),IsKeyPressed(KEY_F1))||closedHelp;
+        if(app::IsGameScreen(screen)&&IsWindowFocused()&&IsKeyPressed(KEY_R)){sessionGuard.Restart();consumed=false;}
+        if(!wasBlocked&&sessionGuard.Blocked())gomokuAi.Cancel();
         if(screen!=Screen::Rhythm)rhythmAudio.Stop();
         backgroundMusic.SetSuspended(screen==Screen::Rhythm&&rhythm.State()!=games::rhythm::Status::Ready);
+        if(screen==Screen::Rhythm&&rhythm.State()==games::rhythm::Status::Playing&&wasBlocked!=sessionGuard.Blocked())rhythmAudio.Pause(sessionGuard.Blocked());
+        if(!sessionGuard.Blocked()&&!consumed){
         if (screen == Screen::Race) {
             games::race::UpdateFromInput(race,GetFrameTime(),progressRecords);
         } else if (screen == Screen::Rhythm) {
@@ -176,6 +186,7 @@ int Run() {
             games::gomoku::UpdateFromInput(gomoku, gomokuAi,
                 static_cast<games::gomoku::Strength>(gomokuOptions.strength), mouseCaptured);
         }
+        }
         const bool recordsChanged = highScores.bomber != previousScores.bomber || highScores.fruit != previousScores.fruit || highScores.snake != previousScores.snake ||
             highScores.tetris != previousScores.tetris ||
             highScores.breakout != previousScores.breakout ||
@@ -195,7 +206,7 @@ int Run() {
         BeginDrawing();
         ui::MenuResult result;
         const bool guiWasLocked = GuiIsLocked();
-        if (mouseCaptured) GuiLock();
+        if (mouseCaptured||sessionGuard.Blocked()||consumed) GuiLock();
         if (screen == Screen::Progress) {
             result=ui::DrawProgress(font,settings.language,highScores,progressRecords,breakoutProgress);
         } else if (screen == Screen::Race) {
@@ -234,6 +245,7 @@ int Run() {
             result = ui::DrawMenu(screen, font, settings);
         }
         if (!guiWasLocked) GuiUnlock();
+        ui::DrawSessionOverlay(sessionGuard,screen,font,settings.language);
         if(pageProgress<1) DrawRectangle(0,0,GetScreenWidth(),GetScreenHeight(),Fade(ui::palette::board,(1-ui::motion::Ease(pageProgress))*.9f));
         const ui::MenuResult player = ui::DrawMusicPlayer(font, settings);
         if (player.action != ui::MenuAction::None) result.action = player.action;

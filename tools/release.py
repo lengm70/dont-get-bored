@@ -27,13 +27,14 @@ files.update(filter(None,git(root,'ls-files','--others','--exclude-standard','-z
 files={n for n in files if (root/n).is_file()}
 allowed={'src','tests','assets','config','resources','external','docs','tools','.vscode'}
 secret=[rb'gh[pousr]_[A-Za-z0-9]{30,}',rb'github_pat_[A-Za-z0-9_]{30,}',rb'sk-[A-Za-z0-9_-]{24,}',rb'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----']
+secret.append(rb'(?i)(?:api[_-]?key|access[_-]?token|client[_-]?secret|password)\s*[:=]\s*[\x22\x27][A-Za-z0-9_/+=.-]{16,}[\x22\x27]')
 def audit(name,data):
     parts=Path(name).parts
     assert not any(p.lower() in {'.git','.agents','.codex','.claude','.aws','.cursor','__pycache__'} for p in parts),name
     assert not name.endswith(('config/settings.ini','config/highscores.ini','config/breakout.ini','config/progress.ini')),name
     assert not any(re.search(pattern,data) for pattern in secret),'Credential signature in '+name
 for name in files:
-    assert Path(name).parts[0] in allowed or name in {'.gitignore','CMakeLists.txt','README.md'},'Unexpected source file '+name
+    assert Path(name).parts[0] in allowed or name in {'.gitignore','.clang-format','CMakeLists.txt','README.md'},'Unexpected source file '+name
     audit(name,(root/name).read_bytes())
 notes=Path(args.notes).read_text(encoding='utf-8')
 # Package only default assets, not custom imports copied by the development build.
@@ -117,6 +118,8 @@ def api(path,method='GET',payload=None,data=None,kind=None):
 result={'version':tag,'private':private,'public':public_sha,'releases':{},'files':{}}
 for folder,name,sha in [(root,'dont-get-bored-develop',private),(public,'dont-get-bored',public_sha)]:
     base='/repos/lengm70/'+name
+    metadata=api(base)
+    assert metadata['private']==(name=='dont-get-bored-develop'),'Repository visibility changed'
     release=api(base+'/releases','POST',{'tag_name':tag,'target_commitish':sha,'name':tag+' 正式版','body':notes+'\n\n下载完整 windows-x64.zip 并解压运行。另附EXE（需配合ZIP内素材与DLL）、源码ZIP和SHA-256校验。\n\n自动测试、Release构建、无MSYS2环境路径启动验证与敏感文件检查均通过。','draft':True,'prerelease':False})
     for asset in assets:
         data=asset.read_bytes();a=api(release['upload_url'].split('{')[0]+'?name='+urllib.parse.quote(asset.name),'POST',data=data,kind='application/octet-stream')

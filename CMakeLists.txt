@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(dont_get_bored VERSION 0.8.0 LANGUAGES C CXX)
+project(dont_get_bored VERSION 0.9.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(DONT_GET_BORED_RELEASE_VERSION "0.8.0")
+set(DONT_GET_BORED_RELEASE_VERSION "0.9.0")
 
 find_package(raylib CONFIG REQUIRED)
 find_package(Threads REQUIRED)
@@ -71,6 +71,7 @@ add_executable(dont_get_bored
     src/ui/BackgroundImage.cpp
     src/ui/AdaptiveTheme.cpp
     src/ui/WindowIcon.cpp
+    src/ui/SessionOverlay.cpp
     src/ui/ProgressView.cpp
     src/ui/MenuView.cpp
     src/ui/GameSelectionView.cpp
@@ -101,6 +102,12 @@ endif()
 option(BUILD_TESTING "Build game logic tests" OFF)
 include(CTest)
 if(BUILD_TESTING)
+    add_executable(session_guard_tests tests/SessionGuardTests.cpp)
+    target_include_directories(session_guard_tests PRIVATE src)
+    add_test(NAME session_guard_tests COMMAND session_guard_tests)
+    add_executable(rhythm_asset_tests tests/RhythmAssetTests.cpp)
+    target_link_libraries(rhythm_asset_tests PRIVATE arcade_logic)
+    add_test(NAME rhythm_asset_tests COMMAND rhythm_asset_tests "${CMAKE_CURRENT_SOURCE_DIR}/assets/rhythm")
     add_executable(collection_tests tests/CollectionTests.cpp src/config/CollectionProgress.cpp)
     target_link_libraries(collection_tests PRIVATE arcade_logic)
     add_test(NAME collection_tests COMMAND collection_tests)
@@ -188,11 +195,11 @@ if(BUILD_TESTING)
         src/games/breakout/BreakoutCollision.cpp
         src/games/bomber/BomberVisual.cpp
         src/games/race/RaceScreen.cpp
-    src/games/rhythm/RhythmScreen.cpp
-    src/games/rhythm/RhythmAudio.cpp
-    src/games/sokoban/SokobanScreen.cpp
-    src/games/tank/TankScreen.cpp
-    src/games/bomber/BomberScreen.cpp
+        src/games/rhythm/RhythmScreen.cpp
+        src/games/rhythm/RhythmAudio.cpp
+        src/games/sokoban/SokobanScreen.cpp
+        src/games/tank/TankScreen.cpp
+        src/games/bomber/BomberScreen.cpp
         src/games/breakout/BreakoutVisual.cpp
         src/games/breakout/BreakoutScreen.cpp
         src/games/minesweeper/MinesweeperGame.cpp
