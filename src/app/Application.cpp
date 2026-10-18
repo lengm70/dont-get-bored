@@ -1,6 +1,7 @@
 #include "ui/AnimatedControls.h"
 #include "ui/Motion.h"
 #include "app/Application.h"
+#include "games/sokoban/SokobanScreen.h"
 #include "games/tank/TankScreen.h"
 #include "games/bomber/BomberScreen.h"
 
@@ -75,6 +76,7 @@ int Run() {
     games::twentyone::LoadAssets();
     Screen screen = Screen::MainMenu;
     app::ProgressRecords progressRecords;progressRecords.Load();
+    games::sokoban::SokobanGame sokoban;games::sokoban::ViewState sokobanView;
     games::tank::TankGame tank;
     games::bomber::BomberGame bomber;
     games::bomber::ViewState bomberView;
@@ -112,7 +114,7 @@ int Run() {
             else if (screen == Screen::Fruit || screen == Screen::Snake || screen == Screen::Tetris ||
                      screen == Screen::Breakout || screen == Screen::Minesweeper ||
                      screen == Screen::MinesweeperSetup || screen == Screen::Gomoku ||
-                     screen == Screen::GomokuSetup || screen == Screen::TwentyOne || screen == Screen::Bomber || screen == Screen::Tank) {
+                     screen == Screen::GomokuSetup || screen == Screen::TwentyOne || screen == Screen::Bomber || screen == Screen::Tank || screen == Screen::Sokoban) {
                 screen = Screen::GameSelection;
             }
             else screen = Screen::MainMenu;
@@ -120,7 +122,9 @@ int Run() {
 
         const HighScores previousScores = highScores;
         const bool mouseCaptured = ui::UpdateMusicPlayerInput();
-        if (screen == Screen::Tank) {
+        if (screen == Screen::Sokoban) {
+            games::sokoban::UpdateFromInput(sokoban,sokobanView,GetFrameTime(),progressRecords);
+        } else if (screen == Screen::Tank) {
             games::tank::UpdateFromInput(tank,GetFrameTime(),progressRecords);
         } else if (screen == Screen::Bomber) {
             games::bomber::UpdateFromInput(bomber, bomberView, GetFrameTime());
@@ -173,7 +177,9 @@ int Run() {
         ui::MenuResult result;
         const bool guiWasLocked = GuiIsLocked();
         if (mouseCaptured) GuiLock();
-        if (screen == Screen::Tank) {
+        if (screen == Screen::Sokoban) {
+            games::sokoban::DrawScreen(sokoban,sokobanView,font,settings.language,progressRecords);
+        } else if (screen == Screen::Tank) {
             games::tank::DrawScreen(tank,font,settings.language,progressRecords);
         } else if (screen == Screen::Bomber) {
             games::bomber::DrawScreen(bomber, bomberView, font, settings.language, highScores.bomber);
@@ -274,6 +280,7 @@ int Run() {
             case ui::MenuAction::UseMedia:
                 mediaView.failed = !mediaController.Select(static_cast<media::Kind>(mediaView.category), mediaView.selected);
                 break;
+            case ui::MenuAction::StartSokoban: sokoban.Reset();sokobanView={};screen=Screen::Sokoban;break;
             case ui::MenuAction::StartTank: tank.Reset();screen=Screen::Tank;break;
             case ui::MenuAction::StartBomber:
                 bomber.Reset(bomberView.options);

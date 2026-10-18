@@ -153,6 +153,10 @@ void DrawGameIllustration(GameIllustration game, Rectangle bounds, Font font) {
     DrawRectangleRounded(bounds, selection::cornerRoundness, selection::cornerSegments,
                          selection::artBackground);
     switch (game) {
+        case GameIllustration::Sokoban:
+            canvas.Block({27,38,50,50},selection::orange);canvas.Block({82,86,50,50},selection::mint);
+            canvas.Line({38,49},{66,77},3,selection::darkInk);canvas.Line({66,49},{38,77},3,selection::darkInk);
+            canvas.Circle({109,53},14,selection::purple);break;
         case GameIllustration::Tank:
             canvas.Block({43,48,74,70},selection::mint);
             canvas.Block({32,44,13,82},selection::purple);canvas.Block({117,44,13,82},selection::purple);

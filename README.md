@@ -1,3 +1,7 @@
+# v0.5.0 — Sokoban
+
+Ten games. Sokoban adds 20 distinct puzzles, two introductory maps and progressively more boxes. Every map has a verified legal solution. Arrows/WASD move, Z undoes including a winning push, R resets. Left/Right on Ready selects unlocked levels; Space starts or advances. Completed level best moves and unlocks persist in config/progress.ini.
+
 # v0.4.0 — Tank Battle
 
 Nine games. Tank Battle: solo or local co-op, three waves, destructible brick/solid steel, enemy tanks and a shared base. Space starts; Tab selects co-op before starting; P1 WASD + F/Space, P2 arrows + Enter. Defend the base through all waves. P pauses, R restarts, Esc returns. Best scores are saved separately for solo/co-op in config/progress.ini (ignored by Git).

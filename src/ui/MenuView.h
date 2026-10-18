@@ -8,7 +8,7 @@ namespace ui {
 
 enum class MenuAction {
     None, OpenGameSelection, OpenSettings, StartSnake, StartTetris,
-    StartTank, StartBomber, StartTwentyOne, StartFruit, StartBreakout, StartMinesweeper, LaunchMinesweeper, StartGomoku, LaunchGomoku,
+    StartSokoban, StartTank, StartBomber, StartTwentyOne, StartFruit, StartBreakout, StartMinesweeper, LaunchMinesweeper, StartGomoku, LaunchGomoku,
     OpenMusicSettings, ImportMusic, ImportBackground, OpenMediaLibrary, ImportMedia, UseMedia,
     PreviousMusic, ToggleMusic, NextMusic, Back, Quit
 };
