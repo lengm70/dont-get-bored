@@ -36,3 +36,6 @@ token.json
 tokens.json
 api-keys.*
 api_keys.*
+
+/config/progress.ini
+/config/progress.ini.tmp

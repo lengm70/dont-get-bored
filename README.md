@@ -1,3 +1,7 @@
+# v0.4.0 — Tank Battle
+
+Nine games. Tank Battle: solo or local co-op, three waves, destructible brick/solid steel, enemy tanks and a shared base. Space starts; Tab selects co-op before starting; P1 WASD + F/Space, P2 arrows + Enter. Defend the base through all waves. P pauses, R restarts, Esc returns. Best scores are saved separately for solo/co-op in config/progress.ini (ignored by Git).
+
 # don't get bored
 
 A C++17 GUI collection with Snake, Tetris, Breakout, Minesweeper, Gomoku, Fruit Merge, Twenty One and Bomber, with Chinese and English menus. Every game starts with **Space** from its ready screen.

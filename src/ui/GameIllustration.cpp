@@ -153,6 +153,10 @@ void DrawGameIllustration(GameIllustration game, Rectangle bounds, Font font) {
     DrawRectangleRounded(bounds, selection::cornerRoundness, selection::cornerSegments,
                          selection::artBackground);
     switch (game) {
+        case GameIllustration::Tank:
+            canvas.Block({43,48,74,70},selection::mint);
+            canvas.Block({32,44,13,82},selection::purple);canvas.Block({117,44,13,82},selection::purple);
+            canvas.Line({80,80},{80,22},10,selection::mint);canvas.Circle({80,80},18,selection::darkInk);break;
         case GameIllustration::Bomber: games::bomber::DrawBomberIcon(bounds); break;
         case GameIllustration::TwentyOne:
             games::twentyone::DrawPlayingCard({1,TWENTY_ONE_SPADES},

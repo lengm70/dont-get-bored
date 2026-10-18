@@ -1,12 +1,15 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(dont_get_bored VERSION 0.3.0 LANGUAGES C CXX)
+project(dont_get_bored VERSION 0.4.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(DONT_GET_BORED_RELEASE_VERSION "0.3.0")
+set(DONT_GET_BORED_RELEASE_VERSION "0.4.0")
 
 find_package(raylib CONFIG REQUIRED)
 find_package(Threads REQUIRED)
+
+add_library(arcade_logic STATIC src/config/ProgressRecords.cpp src/games/tank/TankGame.cpp src/games/tank/TankAI.cpp)
+target_include_directories(arcade_logic PUBLIC src)
 
 add_library(bomber_logic STATIC
     src/games/bomber/BomberPowerUps.cpp
@@ -48,6 +51,7 @@ add_executable(dont_get_bored
     src/games/breakout/BreakoutGame.cpp
     src/games/breakout/BreakoutCollision.cpp
     src/games/bomber/BomberVisual.cpp
+    src/games/tank/TankScreen.cpp
     src/games/bomber/BomberScreen.cpp
     src/games/breakout/BreakoutVisual.cpp
     src/games/breakout/BreakoutScreen.cpp
@@ -72,7 +76,7 @@ add_executable(dont_get_bored
 )
 target_compile_features(dont_get_bored PRIVATE c_std_11 cxx_std_17)
 target_include_directories(dont_get_bored PRIVATE src external)
-target_link_libraries(dont_get_bored PRIVATE raylib Threads::Threads bomber_logic)
+target_link_libraries(dont_get_bored PRIVATE raylib Threads::Threads bomber_logic arcade_logic)
 add_custom_command(TARGET dont_get_bored POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_CURRENT_SOURCE_DIR}/assets" "$<TARGET_FILE_DIR:dont_get_bored>/assets")
@@ -91,6 +95,9 @@ endif()
 option(BUILD_TESTING "Build game logic tests" OFF)
 include(CTest)
 if(BUILD_TESTING)
+    add_executable(tank_tests tests/TankTests.cpp)
+    target_link_libraries(tank_tests PRIVATE arcade_logic)
+    add_test(NAME tank_tests COMMAND tank_tests "${CMAKE_CURRENT_BINARY_DIR}/tank-test.ini")
     add_executable(bomber_tests tests/BomberTests.cpp src/config/HighScores.cpp)
     target_link_libraries(bomber_tests PRIVATE bomber_logic)
     add_test(NAME bomber_tests COMMAND bomber_tests "${CMAKE_CURRENT_BINARY_DIR}/bomber-test-data")
@@ -162,7 +169,8 @@ if(BUILD_TESTING)
         src/games/breakout/BreakoutGame.cpp
         src/games/breakout/BreakoutCollision.cpp
         src/games/bomber/BomberVisual.cpp
-        src/games/bomber/BomberScreen.cpp
+        src/games/tank/TankScreen.cpp
+    src/games/bomber/BomberScreen.cpp
         src/games/breakout/BreakoutVisual.cpp
         src/games/breakout/BreakoutScreen.cpp
         src/games/minesweeper/MinesweeperGame.cpp
@@ -180,7 +188,7 @@ if(BUILD_TESTING)
     )
     target_compile_features(game_input_tests PRIVATE cxx_std_17)
     target_include_directories(game_input_tests PRIVATE src external)
-    target_link_libraries(game_input_tests PRIVATE raylib Threads::Threads bomber_logic)
+    target_link_libraries(game_input_tests PRIVATE raylib Threads::Threads bomber_logic arcade_logic)
     # Rename substituted queries so tests also link against static raylib builds.
     target_compile_definitions(game_input_tests PRIVATE
         IsKeyPressed=TestIsKeyPressed IsKeyDown=TestIsKeyDown

@@ -1,6 +1,7 @@
 #include "ui/AnimatedControls.h"
 #include "ui/Motion.h"
 #include "app/Application.h"
+#include "games/tank/TankScreen.h"
 #include "games/bomber/BomberScreen.h"
 
 #include <algorithm>
@@ -73,6 +74,8 @@ int Run() {
     unsigned themeRevision = ui::palette::revision;
     games::twentyone::LoadAssets();
     Screen screen = Screen::MainMenu;
+    app::ProgressRecords progressRecords;progressRecords.Load();
+    games::tank::TankGame tank;
     games::bomber::BomberGame bomber;
     games::bomber::ViewState bomberView;
     games::fruit::FruitGame fruit;
@@ -109,7 +112,7 @@ int Run() {
             else if (screen == Screen::Fruit || screen == Screen::Snake || screen == Screen::Tetris ||
                      screen == Screen::Breakout || screen == Screen::Minesweeper ||
                      screen == Screen::MinesweeperSetup || screen == Screen::Gomoku ||
-                     screen == Screen::GomokuSetup || screen == Screen::TwentyOne || screen == Screen::Bomber) {
+                     screen == Screen::GomokuSetup || screen == Screen::TwentyOne || screen == Screen::Bomber || screen == Screen::Tank) {
                 screen = Screen::GameSelection;
             }
             else screen = Screen::MainMenu;
@@ -117,7 +120,9 @@ int Run() {
 
         const HighScores previousScores = highScores;
         const bool mouseCaptured = ui::UpdateMusicPlayerInput();
-        if (screen == Screen::Bomber) {
+        if (screen == Screen::Tank) {
+            games::tank::UpdateFromInput(tank,GetFrameTime(),progressRecords);
+        } else if (screen == Screen::Bomber) {
             games::bomber::UpdateFromInput(bomber, bomberView, GetFrameTime());
             if (!bomberView.setup && bomber.Progress().Settings().mode == games::bomber::Mode::Solo)
                 highScores.bomber = std::max(highScores.bomber, bomber.Score());
@@ -163,11 +168,14 @@ int Run() {
             TraceLog(LOG_WARNING, "Could not save high scores: %s", highScoresPath);
         }
 
+        if(progressRecords.Dirty()&&!progressRecords.Save()) TraceLog(LOG_WARNING,"Could not save game progress");
         BeginDrawing();
         ui::MenuResult result;
         const bool guiWasLocked = GuiIsLocked();
         if (mouseCaptured) GuiLock();
-        if (screen == Screen::Bomber) {
+        if (screen == Screen::Tank) {
+            games::tank::DrawScreen(tank,font,settings.language,progressRecords);
+        } else if (screen == Screen::Bomber) {
             games::bomber::DrawScreen(bomber, bomberView, font, settings.language, highScores.bomber);
         } else if (screen == Screen::Fruit) {
             games::fruit::DrawScreen(fruit, font, settings.language, highScores.fruit);
@@ -266,6 +274,7 @@ int Run() {
             case ui::MenuAction::UseMedia:
                 mediaView.failed = !mediaController.Select(static_cast<media::Kind>(mediaView.category), mediaView.selected);
                 break;
+            case ui::MenuAction::StartTank: tank.Reset();screen=Screen::Tank;break;
             case ui::MenuAction::StartBomber:
                 bomber.Reset(bomberView.options);
                 bomberView.setup = true;

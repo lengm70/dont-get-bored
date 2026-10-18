@@ -1,4 +1,5 @@
 #include "ui/FontLoader.h"
+#include "games/common/ArcadeUi.h"
 #include "games/bomber/BomberLabels.h"
 #include "games/breakout/BreakoutLabels.h"
 
@@ -39,6 +40,7 @@ Font LoadMenuFont(const std::vector<std::string>& additionalText) {
     for (const auto* labels : {&games::bomber::chinese, &games::bomber::english}) {
         for (const char* label : games::bomber::AllLabels(*labels)) collect(label);
     }
+    collect(games::arcade::glyphs);
     collect(text::title);
     collect("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
     for (const auto* labels : {&games::twentyone::chinese, &games::twentyone::english}) {

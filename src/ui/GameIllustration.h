@@ -4,7 +4,7 @@
 
 namespace ui {
 
-enum class GameIllustration { Snake, Tetris, Breakout, Minesweeper, Gomoku, Fruit, TwentyOne, Bomber };
+enum class GameIllustration { Snake, Tetris, Breakout, Minesweeper, Gomoku, Fruit, TwentyOne, Bomber, Tank };
 
 void DrawGameIllustration(GameIllustration game, Rectangle bounds, Font font);
 

@@ -4,6 +4,7 @@
 #include <stdexcept>
 
 #include "raylib.h"
+#include "games/tank/TankScreen.h"
 #include "games/bomber/BomberScreen.h"
 #include "games/fruit/FruitScreen.h"
 #include "games/breakout/BreakoutScreen.h"
@@ -43,6 +44,12 @@ int GetScreenHeight() { return height; }
 
 int main() {
     try {
+        games::tank::TankGame tank;app::ProgressRecords records;
+        Clear();keys[KEY_SPACE]=true;games::tank::UpdateFromInput(tank,seconds,records);
+        Require(tank.State()==games::tank::Status::Playing&&tank.Bullets().empty(),"Tank Space starts without firing");
+        Clear();keys[KEY_F]=true;games::tank::UpdateFromInput(tank,seconds,records);
+        Require(!tank.Bullets().empty(),"Tank fire input");
+        Clear();
         namespace bomber = games::bomber;
         bomber::BomberGame bomberGame(42); bomber::ViewState bomberView;
         Clear(); keys[KEY_SPACE] = true;
