@@ -1,3 +1,7 @@
+# v0.7.0 — Space Race
+
+All twelve games are now present. Space Race has three distinct circuits and three-lap time trials, acceleration, braking, inertia and handbrake drift. Up/W accelerates, Down/S brakes, Left/Right (A/D) steers, Space drifts after starting. Left/Right selects a track on Ready. Ordered forward checkpoints prevent skipping laps; off-track travel slows the ship. Best total and best single lap are saved separately for each circuit. Time limit: three minutes.
+
 # v0.6.0 — Rhythm
 
 Eleven games. Three original synthesized songs (96/120/144 BPM), synchronized four-lane charts, Perfect/Good/Miss, empty-key penalties, combos, accuracy and grades. D/F/J/K hit; Left/Right selects a track on Ready, Up/Down changes a saved ±150ms judgment offset. Space starts without hitting a lane. P pauses both song and game; the global BGM suspends while playing. Records per track are in config/progress.ini. Audio assets must remain alongside the EXE; playback errors are shown rather than silently running an unsynchronized clock.

@@ -4,6 +4,8 @@
 #include <stdexcept>
 
 #include "raylib.h"
+#include "games/race/RaceScreen.h"
+#include "games/sokoban/SokobanScreen.h"
 #include "games/tank/TankScreen.h"
 #include "games/bomber/BomberScreen.h"
 #include "games/fruit/FruitScreen.h"
@@ -44,6 +46,19 @@ int GetScreenHeight() { return height; }
 
 int main() {
     try {
+        games::race::RaceGame race;app::ProgressRecords arcadeRecords;
+        Clear();keys[KEY_SPACE]=true;games::race::UpdateFromInput(race,seconds,arcadeRecords);
+        Require(race.State()==games::race::Status::Playing&&race.Time()==0,"Race starts without advancing time");
+        Clear();keys[KEY_UP]=true;games::race::UpdateFromInput(race,seconds,arcadeRecords);Require(race.Speed()>0,"Race acceleration adapter");
+        Clear();keys[KEY_P]=true;games::race::UpdateFromInput(race,seconds,arcadeRecords);Require(race.State()==games::race::Status::Paused,"Race pause");
+        games::sokoban::SokobanGame sokoban;games::sokoban::ViewState puzzleView;
+        Clear();keys[KEY_SPACE]=true;games::sokoban::UpdateFromInput(sokoban,puzzleView,seconds,arcadeRecords);
+        Require(sokoban.Phase()==games::sokoban::Status::Playing&&sokoban.Board().moves==0,"Puzzle starts without pushing");
+        Clear();keys[KEY_RIGHT]=true;games::sokoban::UpdateFromInput(sokoban,puzzleView,seconds,arcadeRecords);
+        Clear();games::sokoban::UpdateFromInput(sokoban,puzzleView,seconds,arcadeRecords);
+        Clear();keys[KEY_RIGHT]=true;games::sokoban::UpdateFromInput(sokoban,puzzleView,seconds,arcadeRecords);
+        Require(sokoban.Phase()==games::sokoban::Status::Won&&arcadeRecords.Get("sokoban.moves.1")==2,"Puzzle win saves record via real input adapter");
+        Clear();
         games::tank::TankGame tank;app::ProgressRecords records;
         Clear();keys[KEY_SPACE]=true;games::tank::UpdateFromInput(tank,seconds,records);
         Require(tank.State()==games::tank::Status::Playing&&tank.Bullets().empty(),"Tank Space starts without firing");

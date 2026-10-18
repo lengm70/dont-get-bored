@@ -65,10 +65,10 @@ struct SelectionLabels {
 };
 
 inline constexpr SelectionLabels selectionChinese{
-    "十一款小游戏，随时开局", "吃食物，让小蛇长大", "旋转方块，消除整行",
+    "十二款小游戏，随时开局", "吃食物，让小蛇长大", "旋转方块，消除整行",
     "接住小球，击碎砖块", "插旗排雷，寻找安全格", "双人对弈，挑战电脑", "碰撞合成，目标西瓜", "进入游戏"};
 inline constexpr SelectionLabels selectionEnglish{
-    "Eleven games. Pick your next break.", "Grow & eat", "Stack & clear",
+    "Twelve games. Pick your next break.", "Grow & eat", "Stack & clear",
     "Break bricks", "Find safe tiles", "Connect five", "Drop & merge", "Play"};
 
 inline const SelectionLabels& SelectionForLanguage(app::Language language) {

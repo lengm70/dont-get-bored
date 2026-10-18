@@ -1,6 +1,7 @@
 #include "ui/AnimatedControls.h"
 #include "ui/Motion.h"
 #include "app/Application.h"
+#include "games/race/RaceScreen.h"
 #include "games/rhythm/RhythmScreen.h"
 #include "games/sokoban/SokobanScreen.h"
 #include "games/tank/TankScreen.h"
@@ -77,6 +78,7 @@ int Run() {
     games::twentyone::LoadAssets();
     Screen screen = Screen::MainMenu;
     app::ProgressRecords progressRecords;progressRecords.Load();
+    games::race::RaceGame race;
     games::rhythm::RhythmGame rhythm;games::rhythm::RhythmAudio rhythmAudio;games::rhythm::ViewState rhythmView;
     rhythmView.offsetMs=progressRecords.Get("rhythm.offset")?std::clamp(progressRecords.Get("rhythm.offset")-200,-150,150):0;
     games::sokoban::SokobanGame sokoban;games::sokoban::ViewState sokobanView;
@@ -117,7 +119,7 @@ int Run() {
             else if (screen == Screen::Fruit || screen == Screen::Snake || screen == Screen::Tetris ||
                      screen == Screen::Breakout || screen == Screen::Minesweeper ||
                      screen == Screen::MinesweeperSetup || screen == Screen::Gomoku ||
-                     screen == Screen::GomokuSetup || screen == Screen::TwentyOne || screen == Screen::Bomber || screen == Screen::Tank || screen == Screen::Sokoban || screen == Screen::Rhythm) {
+                     screen == Screen::GomokuSetup || screen == Screen::TwentyOne || screen == Screen::Bomber || screen == Screen::Tank || screen == Screen::Sokoban || screen == Screen::Rhythm || screen == Screen::Race) {
                 screen = Screen::GameSelection;
             }
             else screen = Screen::MainMenu;
@@ -127,7 +129,9 @@ int Run() {
         const bool mouseCaptured = ui::UpdateMusicPlayerInput();
         if(screen!=Screen::Rhythm)rhythmAudio.Stop();
         backgroundMusic.SetSuspended(screen==Screen::Rhythm&&rhythm.State()!=games::rhythm::Status::Ready);
-        if (screen == Screen::Rhythm) {
+        if (screen == Screen::Race) {
+            games::race::UpdateFromInput(race,GetFrameTime(),progressRecords);
+        } else if (screen == Screen::Rhythm) {
             games::rhythm::UpdateFromInput(rhythm,rhythmAudio,rhythmView,GetFrameTime(),settings.musicVolume,progressRecords);
             backgroundMusic.SetSuspended(rhythm.State()!=games::rhythm::Status::Ready);
         } else if (screen == Screen::Sokoban) {
@@ -185,7 +189,9 @@ int Run() {
         ui::MenuResult result;
         const bool guiWasLocked = GuiIsLocked();
         if (mouseCaptured) GuiLock();
-        if (screen == Screen::Rhythm) {
+        if (screen == Screen::Race) {
+            games::race::DrawScreen(race,font,settings.language,progressRecords);
+        } else if (screen == Screen::Rhythm) {
             games::rhythm::DrawScreen(rhythm,rhythmView,font,settings.language,progressRecords);
         } else if (screen == Screen::Sokoban) {
             games::sokoban::DrawScreen(sokoban,sokobanView,font,settings.language,progressRecords);
@@ -290,6 +296,7 @@ int Run() {
             case ui::MenuAction::UseMedia:
                 mediaView.failed = !mediaController.Select(static_cast<media::Kind>(mediaView.category), mediaView.selected);
                 break;
+            case ui::MenuAction::StartRace: race.Reset();screen=Screen::Race;break;
             case ui::MenuAction::StartRhythm: rhythm.Reset();rhythmView.audioFailed=false;screen=Screen::Rhythm;break;
             case ui::MenuAction::StartSokoban: sokoban.Reset();sokobanView={};screen=Screen::Sokoban;break;
             case ui::MenuAction::StartTank: tank.Reset();screen=Screen::Tank;break;

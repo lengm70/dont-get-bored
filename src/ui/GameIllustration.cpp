@@ -153,6 +153,10 @@ void DrawGameIllustration(GameIllustration game, Rectangle bounds, Font font) {
     DrawRectangleRounded(bounds, selection::cornerRoundness, selection::cornerSegments,
                          selection::artBackground);
     switch (game) {
+        case GameIllustration::Race:
+            DrawRing(canvas.Point(80,80),47*canvas.scale,58*canvas.scale,0,360,40,Fade(selection::purple,.7f));
+            DrawTriangle(canvas.Point(132,65),canvas.Point(118,91),canvas.Point(141,91),selection::mint);
+            canvas.Line({28,76},{49,76},3,selection::yellow);break;
         case GameIllustration::Rhythm:
             for(int i=0;i<4;++i){canvas.Line({float(28+i*34),25},{float(28+i*34),139},2,selection::artGridColor);canvas.Block({float(18+i*34),float(30+i*19),22,11},i%2?selection::coral:selection::mint);}
             canvas.Line({16,128},{145,128},3,selection::yellow);break;
