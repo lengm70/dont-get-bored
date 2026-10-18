@@ -31,7 +31,12 @@ void BackgroundMusic::TogglePause() {
     if (!trackLoaded_) return;
     paused_ = !paused_;
     if (paused_) PauseMusicStream(track_);
-    else ResumeMusicStream(track_);
+    else if(!suspended_) ResumeMusicStream(track_);
+}
+
+void BackgroundMusic::SetSuspended(bool value) {
+    if(suspended_==value)return;suspended_=value;if(!trackLoaded_)return;
+    if(value)PauseMusicStream(track_);else if(!paused_)ResumeMusicStream(track_);
 }
 
 void BackgroundMusic::SetVolume(float volume) {
@@ -40,7 +45,7 @@ void BackgroundMusic::SetVolume(float volume) {
 }
 
 void BackgroundMusic::Update() {
-    if (!initialized_ || !trackLoaded_ || paused_) return;
+    if (!initialized_ || !trackLoaded_ || paused_ || suspended_) return;
     UpdateMusicStream(track_);
     if (!IsMusicStreamPlaying(track_)) PlayMusicStream(track_);
 }
@@ -62,6 +67,7 @@ bool BackgroundMusic::LoadTrack(const std::filesystem::path& path) {
     paused_ = false;
     SetMusicVolume(track_, volume_);
     PlayMusicStream(track_);
+    if(suspended_)PauseMusicStream(track_);
     return true;
 }
 

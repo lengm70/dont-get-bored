@@ -2,6 +2,6 @@
 
 namespace app {
 
-enum class Screen { MainMenu, GameSelection, Settings, MusicSettings, MediaLibrary, Snake, Tetris, Breakout, Minesweeper, MinesweeperSetup, Gomoku, GomokuSetup, Fruit, TwentyOne, Bomber, Tank, Sokoban };
+enum class Screen { MainMenu, GameSelection, Settings, MusicSettings, MediaLibrary, Snake, Tetris, Breakout, Minesweeper, MinesweeperSetup, Gomoku, GomokuSetup, Fruit, TwentyOne, Bomber, Tank, Sokoban, Rhythm };
 
 }  // namespace app

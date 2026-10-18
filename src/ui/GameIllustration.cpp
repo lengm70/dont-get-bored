@@ -153,6 +153,9 @@ void DrawGameIllustration(GameIllustration game, Rectangle bounds, Font font) {
     DrawRectangleRounded(bounds, selection::cornerRoundness, selection::cornerSegments,
                          selection::artBackground);
     switch (game) {
+        case GameIllustration::Rhythm:
+            for(int i=0;i<4;++i){canvas.Line({float(28+i*34),25},{float(28+i*34),139},2,selection::artGridColor);canvas.Block({float(18+i*34),float(30+i*19),22,11},i%2?selection::coral:selection::mint);}
+            canvas.Line({16,128},{145,128},3,selection::yellow);break;
         case GameIllustration::Sokoban:
             canvas.Block({27,38,50,50},selection::orange);canvas.Block({82,86,50,50},selection::mint);
             canvas.Line({38,49},{66,77},3,selection::darkInk);canvas.Line({66,49},{38,77},3,selection::darkInk);

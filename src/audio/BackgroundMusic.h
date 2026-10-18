@@ -13,6 +13,7 @@ public:
     bool LoadCustomTrack(const std::filesystem::path& path);
     bool SelectTrack(const std::filesystem::path& path);
     void TogglePause();
+    void SetSuspended(bool suspended);
     void SetVolume(float volume);
     void Update();
     void Shutdown();
@@ -25,6 +26,7 @@ private:
     bool initialized_ = false;
     bool trackLoaded_ = false;
     bool paused_ = false;
+    bool suspended_ = false;
     float volume_ = 0.5f;
 };
 

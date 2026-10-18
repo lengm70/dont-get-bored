@@ -1,4 +1,5 @@
 #include "ui/FontLoader.h"
+#include "games/rhythm/RhythmScreen.h"
 #include "games/sokoban/SokobanScreen.h"
 #include "games/common/ArcadeUi.h"
 #include "games/bomber/BomberLabels.h"
@@ -43,6 +44,7 @@ Font LoadMenuFont(const std::vector<std::string>& additionalText) {
     }
     collect(games::arcade::glyphs);
     collect(games::sokoban::glyphs);
+    collect(games::rhythm::glyphs);
     collect(text::title);
     collect("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
     for (const auto* labels : {&games::twentyone::chinese, &games::twentyone::english}) {

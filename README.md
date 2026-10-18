@@ -1,3 +1,7 @@
+# v0.6.0 — Rhythm
+
+Eleven games. Three original synthesized songs (96/120/144 BPM), synchronized four-lane charts, Perfect/Good/Miss, empty-key penalties, combos, accuracy and grades. D/F/J/K hit; Left/Right selects a track on Ready, Up/Down changes a saved ±150ms judgment offset. Space starts without hitting a lane. P pauses both song and game; the global BGM suspends while playing. Records per track are in config/progress.ini. Audio assets must remain alongside the EXE; playback errors are shown rather than silently running an unsynchronized clock.
+
 # v0.5.0 — Sokoban
 
 Ten games. Sokoban adds 20 distinct puzzles, two introductory maps and progressively more boxes. Every map has a verified legal solution. Arrows/WASD move, Z undoes including a winning push, R resets. Left/Right on Ready selects unlocked levels; Space starts or advances. Completed level best moves and unlocks persist in config/progress.ini.

@@ -16,6 +16,7 @@ bool Valid(const std::string& key) {
     });
 }
 }
+bool ProgressRecords::Set(const std::string& key,int value){if(!Valid(key)||value<=0||Get(key)==value)return false;values_[key]=value;dirty_=true;return true;}
 int ProgressRecords::Get(const std::string& key) const { auto i=values_.find(key);return i==values_.end()?0:i->second; }
 bool ProgressRecords::Best(const std::string& key,int value,bool lower) {
     if(!Valid(key)||value<=0) return false;

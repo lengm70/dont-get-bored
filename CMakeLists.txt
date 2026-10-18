@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(dont_get_bored VERSION 0.5.0 LANGUAGES C CXX)
+project(dont_get_bored VERSION 0.6.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(DONT_GET_BORED_RELEASE_VERSION "0.5.0")
+set(DONT_GET_BORED_RELEASE_VERSION "0.6.0")
 
 find_package(raylib CONFIG REQUIRED)
 find_package(Threads REQUIRED)
 
-add_library(arcade_logic STATIC src/games/sokoban/SokobanGame.cpp src/games/sokoban/SokobanLevels.cpp src/config/ProgressRecords.cpp src/games/tank/TankGame.cpp src/games/tank/TankAI.cpp)
+add_library(arcade_logic STATIC src/games/rhythm/RhythmGame.cpp src/games/rhythm/RhythmCharts.cpp src/games/sokoban/SokobanGame.cpp src/games/sokoban/SokobanLevels.cpp src/config/ProgressRecords.cpp src/games/tank/TankGame.cpp src/games/tank/TankAI.cpp)
 target_include_directories(arcade_logic PUBLIC src)
 
 add_library(bomber_logic STATIC
@@ -51,6 +51,8 @@ add_executable(dont_get_bored
     src/games/breakout/BreakoutGame.cpp
     src/games/breakout/BreakoutCollision.cpp
     src/games/bomber/BomberVisual.cpp
+    src/games/rhythm/RhythmScreen.cpp
+    src/games/rhythm/RhythmAudio.cpp
     src/games/sokoban/SokobanScreen.cpp
     src/games/tank/TankScreen.cpp
     src/games/bomber/BomberScreen.cpp
@@ -96,6 +98,9 @@ endif()
 option(BUILD_TESTING "Build game logic tests" OFF)
 include(CTest)
 if(BUILD_TESTING)
+    add_executable(rhythm_tests tests/RhythmTests.cpp)
+    target_link_libraries(rhythm_tests PRIVATE arcade_logic)
+    add_test(NAME rhythm_tests COMMAND rhythm_tests)
     add_executable(sokoban_tests tests/SokobanTests.cpp)
     target_link_libraries(sokoban_tests PRIVATE arcade_logic)
     add_test(NAME sokoban_tests COMMAND sokoban_tests)
@@ -173,7 +178,9 @@ if(BUILD_TESTING)
         src/games/breakout/BreakoutGame.cpp
         src/games/breakout/BreakoutCollision.cpp
         src/games/bomber/BomberVisual.cpp
-        src/games/sokoban/SokobanScreen.cpp
+        src/games/rhythm/RhythmScreen.cpp
+    src/games/rhythm/RhythmAudio.cpp
+    src/games/sokoban/SokobanScreen.cpp
     src/games/tank/TankScreen.cpp
     src/games/bomber/BomberScreen.cpp
         src/games/breakout/BreakoutVisual.cpp

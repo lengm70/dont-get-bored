@@ -95,7 +95,7 @@ MenuResult DrawGameSelection(Font font, app::Language language, const UiLayout& 
                      selection::titleSize, config::textColor, layout);
     DrawCenteredText(font, labels.subtitle, selection::subtitleY, selection::subtitleSize,
                      config::mutedColor, layout);
-    const std::array<Entry, 10> entries{{
+    const std::array<Entry, 11> entries{{
         {text::SnakeForLanguage(language).name, labels.snakeHint,
          GameIllustration::Snake, MenuAction::StartSnake, config::accentColor},
         {text::TetrisForLanguage(language).name, labels.tetrisHint,
@@ -113,7 +113,8 @@ MenuResult DrawGameSelection(Font font, app::Language language, const UiLayout& 
         {games::bomber::ForLanguage(language).name, games::bomber::ForLanguage(language).description,
          GameIllustration::Bomber, MenuAction::StartBomber, config::accentColor},
         {language==app::Language::Chinese?"坦克大战":"Tank Battle",language==app::Language::Chinese?"保护基地，击退敌军":"Defend the base; solo or co-op", GameIllustration::Tank,MenuAction::StartTank,config::accentColor},
-        {language==app::Language::Chinese?"推箱子":"Sokoban",language==app::Language::Chinese?"将箱子推至全部目标":"20 puzzles, undo and best moves",GameIllustration::Sokoban,MenuAction::StartSokoban,config::accentColor}
+        {language==app::Language::Chinese?"推箱子":"Sokoban",language==app::Language::Chinese?"将箱子推至全部目标":"20 puzzles, undo and best moves",GameIllustration::Sokoban,MenuAction::StartSokoban,config::accentColor},
+        {language==app::Language::Chinese?"节奏点击":"Rhythm",language==app::Language::Chinese?"三首原创电子曲":"Three original tracks; four lanes",GameIllustration::Rhythm,MenuAction::StartRhythm,config::accentColor}
     }};
     static int page = 0;
     const int pageCount = (static_cast<int>(entries.size()) + selection::cardCount - 1) / selection::cardCount;
